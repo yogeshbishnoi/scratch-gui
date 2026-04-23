@@ -187,5 +187,18 @@
     </script>
 
     <div id="app"></div>
+
+    <%
+    // Thinkzy customisations — only injected into the editor build.
+    // Sources live in static/js/ and are copied verbatim by CopyWebpackPlugin
+    // (`from: 'static', to: ''`). Two files:
+    //   • thinkzy-mode.js   → editor chrome hiding, draggable divider,
+    //                         play/stop buttons, mission URL param.
+    //   • thinkzy-bridge.js → postMessage bridge (project state, sb3 export,
+    //                         SET_THINKZY_MODE, RESIZE_SPRITE, …)
+    if (htmlWebpackPlugin.options.isEditor) { %>
+    <script src="<%= htmlWebpackPlugin.options.root %>js/thinkzy-mode.js"></script>
+    <script src="<%= htmlWebpackPlugin.options.root %>js/thinkzy-bridge.js"></script>
+    <% } %>
   </body>
 </html>
