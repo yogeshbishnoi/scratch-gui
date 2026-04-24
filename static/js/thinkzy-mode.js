@@ -105,15 +105,14 @@
     '.thinkzy-pulse { animation: thinkzy-pulse 1.2s ease-in-out infinite !important; outline: 3px solid #FF9F1C !important; outline-offset: 2px !important; border-radius: 8px !important; z-index: 10 !important; position: relative !important; }',
     '.thinkzy-dimmed { opacity: 0.2 !important; pointer-events: none !important; filter: grayscale(1) !important; }',
     /* ── PHASE 2 mission-specific UI hiding ──────────────────────── */
-    /* Add Sprite "+" button — sprites are pre-loaded per mission via */
-    /* the starter .sb3, kids should not be adding random ones.       */
-    'body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite) [class*="sprite-selector_add-button"] { display: none !important; }',
-    'body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite) [class*="action-menu_main-button"] { display: none !important; }',
-    'body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite) button[aria-label*="Choose a Sprite" i] { display: none !important; }',
-    /* Add Backdrop — only allowed in 2-4 / 2-5                      */
-    'body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop) [class*="stage-selector_add-button"] { display: none !important; }',
-    'body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop) button[aria-label*="Choose a Backdrop" i] { display: none !important; }',
-    /* Sounds tab — only allowed in 2-5                               */
+    /* NOTE: Mission 2-1 now starts with a BLANK stage and the kid adds
+       sprites themselves (ground + character). 2-2 adds obstacles, 2-3
+       restyles the character, 2-5 adds text sprites. So sprite+ and
+       backdrop+ MUST be visible on every Phase 2 mission. The old rules
+       hid them behind `thinkzy-allow-add-sprite` / `thinkzy-allow-backdrop`
+       classes; that made sense when starter .sb3 pre-loaded everything,
+       but now kids need to reach those buttons.                         */
+    /* Sounds tab — only allowed in 2-5                                  */
     'body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-sound) [class*="react-tabs_react-tabs__tab"]:nth-of-type(3) { display: none !important; }',
     /* Find / search box — distracts kids during step-by-step builds */
     'body[class*="thinkzy-mode-2"] input[type="search"] { display: none !important; }',
