@@ -32,6 +32,41 @@
   function initBridge(vm) {
     var runtime = vm.runtime;
 
+    // ── Force a clean stage size for blank-start missions ──────────────
+    // Mission 2-1 loads with no starter_project_url, and scratch-render
+    // can land in a state where drawables exist but nothing renders to
+    // the visible canvas (pick() returns -1, readPixels returns garbage).
+    // Calling setStageSize(480, 360) forces scratch-vm/runtime to re-
+    // initialise the renderer's projection + customStageSize and unstick
+    // the pipeline. Safe to call even when the VM is already at 480x360
+    // — it's idempotent.
+    try {
+      if (vm.setStageSize) vm.setStageSize(480, 360);
+    } catch (e) { /* swallow — never block bridge init */ }
+
+    // ── Watch the canvas for CSS size changes and keep the WebGL
+    //    drawing buffer in sync. scratch-gui's stage.jsx only calls
+    //    renderer.resize() from componentDidMount/Update (driven by
+    //    stageSize/isFullScreen/dimensions props), so container-driven
+    //    resizes (iframe width change, parent chat-dock toggle) leave
+    //    the buffer stale. ResizeObserver on the canvas closes that gap.
+    try {
+      var stageCanvas = document.querySelector('[class*="stage_stage"] canvas');
+      if (stageCanvas && typeof ResizeObserver !== 'undefined' && !window.__thinkzyCanvasRO) {
+        window.__thinkzyCanvasRO = new ResizeObserver(function () {
+          try {
+            var w = stageCanvas.clientWidth;
+            var h = stageCanvas.clientHeight;
+            if (w > 0 && h > 0 && vm.renderer && vm.renderer.resize) {
+              vm.renderer.resize(w, h);
+              vm.renderer.draw();
+            }
+          } catch (err) { /* ignore */ }
+        });
+        window.__thinkzyCanvasRO.observe(stageCanvas);
+      }
+    } catch (e) { /* ignore */ }
+
     function getBlockTypes(blocks) {
       var opcodes = {};
       var allBlocks = blocks._blocks || {};
@@ -194,6 +229,27 @@
       // ── Resize: recalculate stage dimensions after layout change ────
       if (data.type === 'RESIZE') {
         window.dispatchEvent(new Event('resize'));
+      }
+
+      // ── Force-resize: parent-triggered "stage is sleeping" recovery ─
+      // Fires from the canvas-error retry UI. Re-runs the same stage-
+      // initialisation sequence we do on bridge init, forcing the
+      // renderer to rebuild its projection + drawing buffer.
+      if (data.type === 'FORCE_RESIZE') {
+        try {
+          if (vm.setStageSize) vm.setStageSize(480, 360);
+          var cvs = document.querySelector('[class*="stage_stage"] canvas');
+          if (cvs && vm.renderer && vm.renderer.resize) {
+            vm.renderer.resize(cvs.clientWidth || 480, cvs.clientHeight || 360);
+            vm.renderer.draw();
+          }
+          window.parent.postMessage({ type: 'FORCE_RESIZE_DONE' }, '*');
+        } catch (err) {
+          window.parent.postMessage({
+            type: 'FORCE_RESIZE_ERROR',
+            error: (err && err.message) || 'force resize failed'
+          }, '*');
+        }
       }
 
       // ── Apply mission-specific UI mode (chrome-hiding allow-list) ───
@@ -380,6 +436,45 @@
 
     vm.on('TARGETS_UPDATE', function () {
       pushChange('TARGETS_UPDATED');
+    });
+
+    // ── Render-health telemetry ────────────────────────────────────
+    // Periodically checks whether the WebGL drawing buffer is usable
+    // and reports STAGE_RENDER_OK or STAGE_RENDER_ERROR to the parent.
+    // Parent uses this to show the "stage is sleeping" error state
+    // and to log STAGE_RENDER_ERROR metrics.
+    function checkRenderHealth() {
+      try {
+        var r = vm.runtime && vm.runtime.renderer;
+        var gl = r && r.gl;
+        if (!gl) return;
+        var w = gl.drawingBufferWidth;
+        var h = gl.drawingBufferHeight;
+        var ok = w > 0 && h > 0 && gl.getError() === gl.NO_ERROR;
+        window.parent.postMessage({
+          type: ok ? 'STAGE_RENDER_OK' : 'STAGE_RENDER_ERROR',
+          data: { bufferWidth: w, bufferHeight: h }
+        }, '*');
+      } catch (e) { /* ignore */ }
+    }
+    setTimeout(checkRenderHealth, 3000);
+    setTimeout(checkRenderHealth, 8000);
+
+    // ── Sprite-rendered signal (fires once per new sprite) ───────────
+    // Used by parent for the "first sprite" delight beat and the
+    // add-sprite funnel metric.
+    var _knownSpriteIds = new Set();
+    runtime.on('targetWasCreated', function (target) {
+      if (!target || target.isStage) return;
+      var id = target.id;
+      if (_knownSpriteIds.has(id)) return;
+      _knownSpriteIds.add(id);
+      setTimeout(function () {
+        window.parent.postMessage({
+          type: 'SPRITE_RENDERED',
+          data: { name: target.getName ? target.getName() : '', id: id }
+        }, '*');
+      }, 100);
     });
 
     // ── Signal ready ────────────────────────────────────────────────
