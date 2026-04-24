@@ -145,40 +145,41 @@
     _setupDone = true;
     console.log('[Thinkzy] Layout setup: injecting editor↔stage divider');
 
-    // Enforce a minimum width on the stage wrapper so it NEVER disappears
-    // off-screen when the kid drags the divider too far right. The user
-    // previously reported the sprite/stage panel jumping out of view.
-    stageWrapper.style.setProperty('min-width', '320px', 'important');
-    stageWrapper.style.setProperty('flex-shrink', '0', 'important');
+    // NOTE: Previous versions of this file set `min-width: 320px` and
+    // `flex-shrink: 0` on stageWrapper AND added a window-resize listener
+    // that re-clamped editorWrapper's width. Both fought TurboWarp's own
+    // responsive layout — the sprite+ / backdrop+ icons slid off-screen
+    // on resize, and sprite costumes rendered in the wrong place. Removed.
+    // TurboWarp's native flex (flex-basis: 0 on stageWrapper) handles the
+    // split correctly as long as we only set editorWrapper's width while
+    // the kid is actively dragging the divider.
 
-    // ── Divider: editor ↔ stage (the ONLY divider — a 2nd one for the
-    //    flyout was tried but broke Blockly's internal layout) ──
+    // ── Divider: editor ↔ stage (single divider — see note below) ──
     var divider = document.createElement('div');
     divider.className = 'thinkzy-divider';
     flexWrapper.insertBefore(divider, stageWrapper);
     console.log('[Thinkzy] Divider injected, editor width:', editorWrapper.offsetWidth);
 
-    // Clamp helper — keeps the editor within safe bounds relative to the
-    // current flex-wrapper width (responds to window resize).
+    // Clamp drag-time only. 30–75% of flex-wrapper is the documented
+    // safe range in scratch-gui's own mediaquery breakpoints.
     function clampEditorWidth(newW) {
       var total = flexWrapper.offsetWidth;
-      // Editor must leave at least 320px for the stage, but no less than
-      // 30% of the total for itself (so the block palette stays usable).
-      var minEditor = Math.max(total * 0.30, 400);
-      var maxEditor = Math.max(total - 320, total * 0.55);
-      return Math.max(minEditor, Math.min(maxEditor, newW));
+      return Math.max(total * 0.30, Math.min(total * 0.75, newW));
     }
 
     // Restore saved editor width before first paint completes
     var _savedEditorWidth = _lsGetNum('thinkzy-editor-width');
     if (_savedEditorWidth) {
-      editorWrapper.style.setProperty('width', clampEditorWidth(_savedEditorWidth) + 'px', 'important');
+      var clamped = clampEditorWidth(_savedEditorWidth);
+      if (clamped > 100) {
+        editorWrapper.style.setProperty('width', clamped + 'px', 'important');
+      }
     }
 
-    // Draggable divider logic — uses Pointer Capture to beat Blockly
+    // Draggable divider — Pointer Capture ensures drags survive Blockly
     var isDragging = false;
     var startX, startWidth;
-    divider.style.touchAction = 'none';  // Required for pointer capture
+    divider.style.touchAction = 'none';
 
     divider.addEventListener('pointerdown', function(e) {
       isDragging = true;
@@ -205,30 +206,16 @@
       divider.classList.remove('dragging');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      // Persist so the kid's chosen layout survives reloads
       _lsSetNum('thinkzy-editor-width', editorWrapper.offsetWidth);
-      // Tell TurboWarp/Blockly to recalculate SVG dimensions
       window.dispatchEvent(new Event('resize'));
     });
 
-    // On window resize, re-clamp the editor width so the stage never
-    // disappears when the browser window shrinks.
-    window.addEventListener('resize', function() {
-      var current = editorWrapper.offsetWidth;
-      var clamped = clampEditorWidth(current);
-      if (Math.abs(clamped - current) > 4) {
-        editorWrapper.style.setProperty('width', clamped + 'px', 'important');
-      }
-    });
+    // An earlier experiment added a 2nd divider between the block palette
+    // (flyout) and script workspace. Blockly lays those out with SVG
+    // absolute-positioning, not flexbox — CSS-width hacks caused the
+    // sprite / stage panels to jump off-screen. Reverted.
 
-    // Note: an earlier version tried to inject a second divider between
-    // the block palette (flyout) and the script workspace. Blockly lays
-    // out those two with SVG absolute positioning, not flexbox, so
-    // CSS-width hacks left the workspace offset incorrectly and caused
-    // the sprite/stage panels to jump out of view. We reverted to a
-    // single divider — the flyout width is managed by Blockly itself.
-
-    // Initial resize to sync TurboWarp's SVG dimensions with restored width
+    // Initial resize to sync TurboWarp's SVG dimensions
     window.dispatchEvent(new Event('resize'));
 
     // ── Inject custom Play / Stop buttons above the stage ──
