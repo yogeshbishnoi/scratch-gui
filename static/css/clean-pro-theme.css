@@ -1,0 +1,764 @@
+/*
+ * Thinkzy "Clean Pro" Theme — TurboWarp Editor
+ * -----------------------------------------------
+ * Targets: https://thinkzy-turbowarp.pages.dev
+ * All selectors use [class*="..."] attribute matching to survive hash changes.
+ * Sections: Globals → Toolbar → Tabs → Controls → Blocks → Workspace → Stage → Sprites
+ */
+
+/* ── GLOBALS ─────────────────────────────────────────────────────────────
+   Font stack and CSS variables used throughout                            */
+:root {
+  --cp-blue:        #185FA5;
+  --cp-blue-light:  #378ADD;
+  --cp-blue-tint:   #E6F1FB;
+  --cp-blue-border: #B5D4F4;
+  --cp-amber:       #EF9F27;
+  --cp-amber-dark:  #BA7517;
+  --cp-red:         #E24B4A;
+  --cp-red-dark:    #A32D2D;
+  --cp-surface:     #FFFFFF;
+  --cp-surface-gray:#FAFBFC;
+  --cp-sidebar-bg:  #F8FAFD;
+  --cp-text:        #1A1A2E;
+  --cp-text-muted:  #4A5568;
+  --cp-text-blue:   #0C447C;
+}
+
+body,
+[class*="gui_page-wrapper"],
+[class*="gui_flex-wrapper"] {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+}
+
+/* ── TOOLBAR ─────────────────────────────────────────────────────────────
+   The top navigation bar — blue background, 40px height                  */
+[class*="menu-bar_menu-bar"] {
+  background: var(--cp-blue) !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18) !important;
+  padding: 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+[class*="menu-bar_main-menu"] {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+/* Thinkzy logo text area */
+[class*="menu-bar_scratch-logo"],
+[class*="menu-bar_scratch-logo"] img {
+  height: 24px !important;
+  width: auto !important;
+  filter: brightness(0) invert(1) !important;
+}
+
+/* Title / project name field */
+[class*="menu-bar_title-field"],
+[class*="menu-bar_title-field-growable"] input,
+[class*="author-info_project-title"] {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #ffffff !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+[class*="menu-bar_title-field-growable"] input::placeholder {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+/* Menu-bar buttons (File, Edit, etc.) */
+[class*="menu-bar_menu-bar-button"],
+[class*="menu-bar_hoverable"],
+[class*="menu-bar_menu-bar-menu"] {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: rgba(255,255,255,0.9) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  transition: background 0.15s ease !important;
+}
+
+[class*="menu-bar_hoverable"]:hover {
+  background: rgba(255,255,255,0.15) !important;
+}
+
+[class*="menu-bar_active"],
+[class*="menu-bar_hoverable"][class*="menu-bar_active"] {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+/* Dividers in menu bar */
+[class*="menu-bar_divider"] {
+  border-color: rgba(255,255,255,0.2) !important;
+}
+
+/* ── TABS (Code / Costumes / Sounds) ─────────────────────────────────────
+   Pill-style tabs inside the toolbar area                                 */
+[class*="gui_tabs"] {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+[class*="gui_tab-list"],
+[class*="react-tabs_react-tabs__tab-list"] {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding: 4px 6px !important;
+  display: flex !important;
+  gap: 4px !important;
+  margin: 0 !important;
+}
+
+[class*="gui_tab"],
+[class*="react-tabs_react-tabs__tab_"] {
+  background: rgba(255,255,255,0.15) !important;
+  color: rgba(255,255,255,0.9) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 3px 12px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+  bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+[class*="gui_tab"]:hover,
+[class*="react-tabs_react-tabs__tab_"]:hover {
+  background: rgba(255,255,255,0.25) !important;
+}
+
+/* Active tab — white pill with blue text */
+[class*="gui_is-selected"],
+[class*="react-tabs_react-tabs__tab--selected"] {
+  background: #ffffff !important;
+  color: var(--cp-blue) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12) !important;
+}
+
+/* Tab panels */
+[class*="gui_tab-panel"],
+[class*="react-tabs_react-tabs__tab-panel_"] {
+  border: none !important;
+  padding: 0 !important;
+}
+
+[class*="react-tabs_react-tabs__tab-panel--selected"],
+[class*="gui_tab-panel"][class*="is-selected"] {
+  display: flex !important;
+}
+
+/* ── CONTROLS (Run ▶ / Stop ■) ───────────────────────────────────────────
+   Amber run button and red stop button styled as pill buttons             */
+[class*="controls_controls-container"] {
+  background: transparent !important;
+  padding: 0 6px !important;
+  gap: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Green flag → Amber run pill */
+[class*="green-flag_green-flag"] {
+  background: var(--cp-amber) !important;
+  border-radius: 16px !important;
+  padding: 4px 14px 4px 10px !important;
+  width: auto !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: background 0.15s ease !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+[class*="green-flag_green-flag"]:hover {
+  background: var(--cp-amber-dark) !important;
+}
+
+[class*="green-flag_green-flag"]:active,
+[class*="green-flag_is-active"] {
+  background: var(--cp-amber-dark) !important;
+  transform: scale(0.97) !important;
+}
+
+/* Override the green flag SVG icon colour to white */
+[class*="green-flag_green-flag"] img,
+[class*="green-flag_green-flag"] svg path {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* Stop button → Red stop pill */
+[class*="stop-all_stop-all"] {
+  background: var(--cp-red) !important;
+  border-radius: 16px !important;
+  padding: 4px 12px 4px 10px !important;
+  width: auto !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: background 0.15s ease !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin-left: 4px !important;
+}
+
+[class*="stop-all_stop-all"]:hover {
+  background: var(--cp-red-dark) !important;
+}
+
+[class*="stop-all_stop-all"]:active,
+[class*="stop-all_is-active"] {
+  background: var(--cp-red-dark) !important;
+  transform: scale(0.97) !important;
+}
+
+[class*="stop-all_stop-all"] img,
+[class*="stop-all_stop-all"] svg path {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* ── BLOCK PALETTE (left panel) ──────────────────────────────────────────
+   Block category sidebar and flyout block list                            */
+
+/* Scratch category menu rail */
+[class*="scratchCategoryMenu"],
+.scratchCategoryMenu {
+  background: var(--cp-sidebar-bg) !important;
+  border-right: 0.5px solid var(--cp-blue-border) !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  padding: 8px 0 !important;
+}
+
+/* Each category button */
+[class*="scratchCategoryMenuItem"],
+.scratchCategoryMenuItem {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 6px 4px !important;
+  cursor: pointer !important;
+  border-radius: 6px !important;
+  margin: 1px 4px !important;
+  transition: background 0.12s ease !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+  color: var(--cp-text-muted) !important;
+  letter-spacing: 0.2px !important;
+  border-left: 2px solid transparent !important;
+}
+
+[class*="scratchCategoryMenuItem"]:hover,
+.scratchCategoryMenuItem:hover {
+  background: var(--cp-blue-tint) !important;
+}
+
+/* Active category */
+[class*="scratchCategoryMenuItemActive"],
+.scratchCategoryMenuItemActive {
+  background: var(--cp-blue-tint) !important;
+  border-left-color: var(--cp-blue) !important;
+  color: var(--cp-text-blue) !important;
+  font-weight: 600 !important;
+}
+
+/* Blockly flyout background (block list panel) */
+.blocklyFlyoutBackground {
+  fill: var(--cp-sidebar-bg) !important;
+  rx: 0 !important;
+}
+
+.blocklyFlyout {
+  background: var(--cp-sidebar-bg) !important;
+}
+
+/* Category label in flyout */
+.blocklyFlyoutLabelText {
+  fill: var(--cp-text-blue) !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.6px !important;
+  text-transform: uppercase !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+}
+
+/* Blocks in flyout */
+.blocklyFlyout .blocklyDraggable > path.blocklyPath {
+  filter: none !important;
+  transition: filter 0.1s ease !important;
+}
+
+.blocklyFlyout .blocklyDraggable:hover > path.blocklyPath {
+  filter: brightness(1.1) !important;
+  cursor: grab !important;
+}
+
+/* Block text */
+.blocklyText,
+.blocklyFlyoutLabelText {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+}
+
+/* Blocks wrapper background */
+[class*="blocks_blocks"] {
+  background: var(--cp-sidebar-bg) !important;
+}
+
+/* ── SCRIPT WORKSPACE ────────────────────────────────────────────────────
+   Center canvas with dot-grid pattern and flat block styling              */
+
+/* Main workspace background */
+.blocklyMainBackground {
+  fill: var(--cp-surface-gray) !important;
+}
+
+/* Dot-grid SVG pattern overlay */
+.blocklyWorkspace {
+  background-image: radial-gradient(circle, var(--cp-blue-border) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+/* Grid dots within Blockly SVG */
+.blocklyGridLine {
+  stroke: var(--cp-blue-border) !important;
+  stroke-width: 1 !important;
+}
+
+/* Script blocks in workspace — flat, no heavy drop shadow */
+.blocklyWorkspace .blocklyDraggable > path.blocklyPath {
+  filter: none !important;
+}
+
+/* Selected block highlight */
+.blocklySelected > path.blocklyPath {
+  stroke: var(--cp-blue-light) !important;
+  stroke-width: 2px !important;
+}
+
+/* Block being dragged */
+.blocklyDragging > path.blocklyPath {
+  opacity: 0.88 !important;
+  filter: drop-shadow(0 4px 10px rgba(24, 95, 165, 0.2)) !important;
+}
+
+/* Workspace container */
+[class*="gui_blocks-wrapper"],
+[class*="blocks_blocks"] {
+  background: var(--cp-surface-gray) !important;
+}
+
+/* ── STAGE AREA ──────────────────────────────────────────────────────────
+   Right panel: stage preview, controls header, sprite info                */
+
+/* Stage wrapper */
+[class*="stage-wrapper_stage-wrapper"],
+[class*="gui_stage-and-target-wrapper"] {
+  border-left: 0.5px solid var(--cp-blue-border) !important;
+  background: var(--cp-surface) !important;
+}
+
+/* Stage canvas container */
+[class*="stage_stage"],
+[class*="stage_frame"] {
+  background: #EAF3DE !important;
+  border-radius: 0 !important;
+}
+
+/* Stage canvas itself — keep it sharp, no border radius */
+[class*="stage_stage"] canvas {
+  border-radius: 0 !important;
+}
+
+/* Stage header bar */
+[class*="stage-header_stage-header-wrapper"],
+[class*="stage-header_stage-menu-wrapper"] {
+  background: var(--cp-surface) !important;
+  border-bottom: 0.5px solid var(--cp-blue-border) !important;
+  padding: 4px 8px !important;
+  min-height: 32px !important;
+}
+
+/* Stage size toggle buttons */
+[class*="stage-header_stage-button"] {
+  background: var(--cp-blue-tint) !important;
+  border: 0.5px solid var(--cp-blue-border) !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+  color: var(--cp-text-blue) !important;
+  cursor: pointer !important;
+  transition: background 0.12s !important;
+}
+
+[class*="stage-header_stage-button"]:hover {
+  background: var(--cp-blue) !important;
+  color: white !important;
+}
+
+/* Stage-size toggle group */
+[class*="stage-header_stage-size-toggle-group"] {
+  display: flex !important;
+  gap: 4px !important;
+}
+
+/* Fullscreen/settings icons in stage header */
+[class*="stage-header_stage-button-icon"] {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* ── SPRITE INFO PANEL ───────────────────────────────────────────────────
+   Property chips for x, y, size, direction under the stage               */
+[class*="sprite-info_sprite-info"] {
+  background: var(--cp-surface) !important;
+  border-top: 0.5px solid var(--cp-blue-border) !important;
+  padding: 8px !important;
+  gap: 6px !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+}
+
+[class*="sprite-info_label"] {
+  font-size: 9px !important;
+  font-weight: 400 !important;
+  color: #888 !important;
+  text-transform: none !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+}
+
+/* Numeric value inputs styled as badge chips */
+[class*="sprite-info_sprite-input"],
+[class*="sprite-info_larger-input"] input,
+[class*="sprite-info_sprite-info"] input[type="text"],
+[class*="sprite-info_sprite-info"] input[type="number"] {
+  background: var(--cp-blue-tint) !important;
+  border: 0.5px solid var(--cp-blue-border) !important;
+  border-radius: 4px !important;
+  color: var(--cp-blue) !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  padding: 3px 7px !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  outline: none !important;
+}
+
+[class*="sprite-info_sprite-input"]:focus,
+[class*="sprite-info_larger-input"] input:focus {
+  border-color: var(--cp-blue) !important;
+  box-shadow: 0 0 0 2px rgba(24,95,165,0.12) !important;
+}
+
+[class*="sprite-info_row"],
+[class*="sprite-info_row-primary"] {
+  gap: 6px !important;
+}
+
+/* Sprite name input */
+[class*="sprite-info_sprite-info"] input[class*="larger-input"] {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--cp-text) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+[class*="sprite-info_sprite-info"] input[class*="larger-input"]:focus {
+  background: var(--cp-blue-tint) !important;
+  border-color: var(--cp-blue-border) !important;
+}
+
+/* Show/hide icons */
+[class*="sprite-info_icon-wrapper"] {
+  cursor: pointer !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.12s !important;
+}
+
+[class*="sprite-info_icon-wrapper"]:hover {
+  opacity: 1 !important;
+}
+
+/* ── SPRITE SELECTOR STRIP ───────────────────────────────────────────────
+   Horizontal/vertical list of sprite thumbnails below stage               */
+[class*="sprite-selector_sprite-selector"] {
+  background: var(--cp-surface) !important;
+  border-top: 0.5px solid var(--cp-blue-border) !important;
+  padding: 6px !important;
+}
+
+[class*="sprite-selector_scroll-wrapper"] {
+  background: transparent !important;
+}
+
+/* Individual sprite thumbnail */
+[class*="sprite-selector-item_sprite-image-outer"],
+[class*="sprite-selector_sprite-wrapper"] > div:first-child {
+  border-radius: 8px !important;
+  border: 1.5px solid var(--cp-blue-border) !important;
+  overflow: hidden !important;
+  transition: border-color 0.12s ease !important;
+  background: var(--cp-surface-gray) !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+/* Selected sprite — blue border */
+[class*="sprite-selector-item_is-selected"] [class*="sprite-selector-item_sprite-image-outer"],
+[class*="sprite-selector-item_is-selected"] > div:first-child {
+  border-color: var(--cp-blue) !important;
+  border-width: 2px !important;
+}
+
+[class*="sprite-selector_sprite"]:hover [class*="sprite-selector-item_sprite-image-outer"] {
+  border-color: var(--cp-blue-light) !important;
+}
+
+/* Sprite name label */
+[class*="sprite-selector-item_sprite-name"],
+[class*="sprite-selector_sprite-name"] {
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  color: var(--cp-text-muted) !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  text-align: center !important;
+}
+
+/* Delete button on sprite — shown on hover */
+[class*="sprite-selector-item_delete-button"] {
+  background: var(--cp-red) !important;
+  border-radius: 50% !important;
+  width: 16px !important;
+  height: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  color: white !important;
+  cursor: pointer !important;
+  opacity: 0 !important;
+  transition: opacity 0.12s ease !important;
+}
+
+[class*="sprite-selector_sprite"]:hover [class*="sprite-selector-item_delete-button"] {
+  opacity: 1 !important;
+}
+
+/* Add sprite button */
+[class*="sprite-selector_add-button"],
+[class*="action-menu_main-button"] {
+  background: var(--cp-blue) !important;
+  border-radius: 50% !important;
+  border: none !important;
+  transition: background 0.15s ease, transform 0.1s ease !important;
+}
+
+[class*="sprite-selector_add-button"]:hover,
+[class*="action-menu_main-button"]:hover {
+  background: var(--cp-blue-light) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Target pane (right column outer wrapper) */
+[class*="target-pane_target-pane"] {
+  background: var(--cp-surface) !important;
+}
+
+/* ── EDITOR OUTER LAYOUT ─────────────────────────────────────────────────
+   Overall page and editor wrapper                                          */
+[class*="gui_editor-wrapper"],
+[class*="gui_page-wrapper"] {
+  background: var(--cp-surface-gray) !important;
+}
+
+/* ── MODALS & ALERTS ─────────────────────────────────────────────────────
+   Connection alerts, loading dialogs                                       */
+[class*="alert_alert"] {
+  border-radius: 8px !important;
+  border: 0.5px solid var(--cp-blue-border) !important;
+  box-shadow: 0 4px 16px rgba(24,95,165,0.12) !important;
+}
+
+[class*="alert_success"] {
+  background: #EAF5EA !important;
+  border-color: #A8D5A2 !important;
+}
+
+[class*="alert_warn"] {
+  background: #FFF8E7 !important;
+  border-color: #F5D98B !important;
+}
+
+/* ── RESPONSIVE: collapse palette at < 900px ─────────────────────────────
+   Narrow palette shows icon-only rail                                      */
+@media (max-width: 900px) {
+  [class*="scratchCategoryMenu"],
+  .scratchCategoryMenu {
+    width: 52px !important;
+    min-width: 52px !important;
+  }
+
+  [class*="scratchCategoryMenuItem"] span,
+  .scratchCategoryMenuItem span {
+    display: none !important;
+  }
+}
+
+/* ── RESPONSIVE: hide stage panel at < 700px ─────────────────────────────
+   Compact view — stage accessed via toggle                                  */
+@media (max-width: 700px) {
+  [class*="stage-wrapper_stage-wrapper"],
+  [class*="gui_stage-and-target-wrapper"] {
+    display: none !important;
+  }
+}
+
+/* ── SCROLLBARS ─────────────────────────────────────────────────────────
+   Thin, blue-tinted scrollbars                                            */
+::-webkit-scrollbar {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cp-blue-border) !important;
+  border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cp-blue-light) !important;
+}
+
+/* ── THINKZY PHASE 2 MODE ────────────────────────────────────────────────
+   Activated when the TurboWarp build receives `?mission=2-X` URL param or
+   `SET_THINKZY_MODE` postMessage and adds `thinkzy-mode-2-1` (etc.) to
+   document.body. Hides editor chrome that's irrelevant for kids in Phase 2,
+   restores canvas resize, and locks the layout to prevent kids accidentally
+   destroying their game by misclicking a menu.
+
+   Coverage: 2-1 → 2-5. The `addBackdrop`/`addSound` allow-list is mission-
+   specific and toggled by adding extra body classes (`thinkzy-allow-backdrop`,
+   `thinkzy-allow-sound`) — see SET_THINKZY_MODE handler.                   */
+
+/* Hide all "secondary" toolbar items in Thinkzy mode. We target the
+   File/Edit/Settings menus, project rename, "See Project Page", "TurboWarp
+   Feedback", language switcher, share button, etc. by their shared menu-bar
+   classes. Note: Run/Stop and Code/Costumes/Sounds tabs are retained. */
+body[class*="thinkzy-mode-2"] [class*="menu-bar_file-group"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_edit-menu"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_settings-menu"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_account-info"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_share-button"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_community-button"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_feedback"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_see-community"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_save-status"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_language"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_title-field"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_title-field-growable"],
+body[class*="thinkzy-mode-2"] [class*="menu-bar_author-info"],
+body[class*="thinkzy-mode-2"] [class*="author-info_project-title"],
+body[class*="thinkzy-mode-2"] [class*="backpack_backpack-container"],
+body[class*="thinkzy-mode-2"] [class*="backpack_backpack-header"],
+body[class*="thinkzy-mode-2"] [class*="gui_backpack"],
+body[class*="thinkzy-mode-2"] [class*="search-bar"],
+body[class*="thinkzy-mode-2"] [class*="searchInput"],
+body[class*="thinkzy-mode-2"] [class*="find_find"],
+body[class*="thinkzy-mode-2"] input[type="search"][placeholder*="Find"] {
+  display: none !important;
+}
+
+/* Hide the "Add Sprite" library button — Phase 2 sprites are pre-loaded per
+   mission via the starter .sb3 file. Re-enable for missions that explicitly
+   ask the kid to add a sprite (currently none in 2-1 → 2-5). */
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
+  [class*="action-menu_main-button"][class*="sprite"],
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
+  [class*="sprite-selector_add-button"],
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
+  button[aria-label*="Choose a Sprite" i],
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
+  button[title*="Choose a Sprite" i] {
+  display: none !important;
+}
+
+/* Hide "Add Backdrop" unless the mission explicitly enables it (2-4 / 2-5) */
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop)
+  [class*="stage-selector_add-button"],
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop)
+  button[aria-label*="Choose a Backdrop" i],
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop)
+  button[title*="Choose a Backdrop" i] {
+  display: none !important;
+}
+
+/* Hide Sounds tab unless explicitly allowed (2-5) */
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-sound)
+  [class*="gui_tab"][data-tab-key="sounds"],
+body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-sound)
+  [class*="react-tabs_react-tabs__tab"]:nth-of-type(3) {
+  display: none !important;
+}
+
+/* ── RESTORE CANVAS RESIZE ──────────────────────────────────────────────
+   The TurboWarp build ships a draggable divider between the workspace and
+   stage panel. Several themes accidentally hide it. We force the divider
+   visible at all viewport widths and restore col-resize cursor.            */
+
+[class*="gui_resize-divider"],
+[class*="gui_workspace-divider"],
+[class*="resize-divider"],
+[class*="WorkspaceDivider"],
+[class*="stage-wrapper_divider"],
+.workspace-resize-handle,
+[data-divider="workspace-stage"] {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  cursor: col-resize !important;
+  background: var(--cp-blue-border) !important;
+  width: 4px !important;
+  min-width: 4px !important;
+  z-index: 10 !important;
+}
+
+/* Stage panel wrapper must allow flex-basis to shrink/grow when divider drags */
+[class*="gui_stage-and-target-wrapper"],
+[class*="stage-wrapper_stage-wrapper"] {
+  flex-shrink: 1 !important;
+  min-width: 200px !important;
+}
+
+/* Workspace wrapper must also allow flex-basis to flex */
+[class*="gui_blocks-wrapper"] {
+  flex: 1 1 0 !important;
+  min-width: 200px !important;
+}
+
+/* Don't auto-hide the stage panel below 700px in Phase 2 — kids on tablets
+   need it for testing. Override the earlier responsive rule. */
+body[class*="thinkzy-mode-2"] [class*="stage-wrapper_stage-wrapper"],
+body[class*="thinkzy-mode-2"] [class*="gui_stage-and-target-wrapper"] {
+  display: flex !important;
+}

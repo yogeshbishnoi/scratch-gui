@@ -37,6 +37,18 @@
   // ── Bail out if we're not in Thinkzy embed mode ─────────────────────
   if (location.search.indexOf('thinkzy=true') === -1) return;
 
+  // ── Inject Clean Pro theme (external CSS, before the inline overrides
+  //    below so Thinkzy's inline !important rules always win ties).
+  //    Webpack CopyWebpackPlugin flattens `static/` → build root, so the
+  //    CSS ships at `/css/clean-pro-theme.css` (not `/static/css/...`).
+  try {
+    var themeLink = document.createElement('link');
+    themeLink.rel = 'stylesheet';
+    themeLink.href = '/css/clean-pro-theme.css';
+    themeLink.setAttribute('data-thinkzy-theme', 'clean-pro');
+    (document.head || document.documentElement).appendChild(themeLink);
+  } catch (e) { /* ignore — theme is a nice-to-have */ }
+
   // ── Inject Thinkzy CSS ──────────────────────────────────────────────
   var s = document.createElement('style');
   s.textContent = [
@@ -110,8 +122,21 @@
   ].join('\n');
   document.head.appendChild(s);
 
-  // ── Wait for TurboWarp to render, then inject draggable divider ──
+  // ── Wait for TurboWarp to render, then inject draggable dividers ──
   var _setupDone = false;
+
+  // Helper: safe localStorage read — returns a number or null
+  function _lsGetNum(key) {
+    try {
+      var v = window.localStorage.getItem(key);
+      var n = v == null ? NaN : Number(v);
+      return isFinite(n) ? n : null;
+    } catch (e) { return null; }
+  }
+  function _lsSetNum(key, n) {
+    try { window.localStorage.setItem(key, String(n)); } catch (e) { /* ignore */ }
+  }
+
   function setupThinkzyLayout() {
     if (_setupDone) return;
     var flexWrapper = document.querySelector('[class*="gui_flex-wrapper"]');
@@ -119,13 +144,19 @@
     var stageWrapper = document.querySelector('[class*="gui_stage-and-target-wrapper"]');
     if (!flexWrapper || !editorWrapper || !stageWrapper) return;
     _setupDone = true;
-    console.log('[Thinkzy] Layout setup: injecting divider between editor and stage');
+    console.log('[Thinkzy] Layout setup: injecting dividers (editor↔stage, palette↔workspace)');
 
-    // Insert divider BETWEEN editor and stage as a flex sibling
+    // ── Divider 1: editor ↔ stage (existing behaviour) ────────────────
     var divider = document.createElement('div');
     divider.className = 'thinkzy-divider';
     flexWrapper.insertBefore(divider, stageWrapper);
-    console.log('[Thinkzy] Divider injected, editor width:', editorWrapper.offsetWidth);
+    console.log('[Thinkzy] Divider 1 injected, editor width:', editorWrapper.offsetWidth);
+
+    // Restore saved editor width before first paint completes
+    var _savedEditorWidth = _lsGetNum('thinkzy-editor-width');
+    if (_savedEditorWidth && _savedEditorWidth > 200 && _savedEditorWidth < flexWrapper.offsetWidth - 200) {
+      editorWrapper.style.setProperty('width', _savedEditorWidth + 'px', 'important');
+    }
 
     // Draggable divider logic — uses Pointer Capture to beat Blockly
     var isDragging = false;
@@ -159,9 +190,94 @@
       divider.classList.remove('dragging');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      // Persist chosen width so the kid keeps their layout across reloads
+      _lsSetNum('thinkzy-editor-width', editorWrapper.offsetWidth);
       // Tell TurboWarp to recalculate
       window.dispatchEvent(new Event('resize'));
     });
+
+    // ── Divider 2: block palette (flyout) ↔ script workspace ──────────
+    // Blockly renders palette + workspace as SVG siblings inside
+    // `[class*="blocks_blocks"]`. There is no official CSS-driven width
+    // on the flyout — Blockly manages it via its own layout code. We drag
+    // a transparent overlay handle and, on drop, call Blockly's internal
+    // reflow by dispatching a window `resize`. The flyout's width is set
+    // via its DOM's `width` attribute on the outer <svg class="blocklyFlyout">.
+    var blocksRoot = editorWrapper.querySelector('[class*="blocks_blocks"]');
+    if (blocksRoot) {
+      var flyout = blocksRoot.querySelector('svg.blocklyFlyout, [class*="blocklyFlyout"]');
+      if (flyout) {
+        var flyoutDivider = document.createElement('div');
+        flyoutDivider.className = 'thinkzy-flyout-divider';
+        flyoutDivider.style.cssText = [
+          'position: absolute',
+          'top: 0',
+          'bottom: 0',
+          'width: 6px',
+          'cursor: col-resize',
+          'z-index: 50',
+          'background: transparent',
+          'touch-action: none'
+        ].join(';');
+        // Positioning relies on blocksRoot being a positioning context
+        var prevPos = blocksRoot.style.position;
+        if (!prevPos || prevPos === 'static') blocksRoot.style.position = 'relative';
+        blocksRoot.appendChild(flyoutDivider);
+
+        // Helper: read current flyout width from its rendered SVG box
+        function getFlyoutWidth() {
+          var bb = flyout.getBoundingClientRect();
+          return bb.width;
+        }
+
+        // Position the divider just to the right of the flyout's current edge
+        function repositionFlyoutDivider() {
+          var w = getFlyoutWidth();
+          flyoutDivider.style.left = (w - 3) + 'px';
+        }
+
+        // Restore saved width, then position handle
+        var savedFlyoutW = _lsGetNum('thinkzy-flyout-width');
+        if (savedFlyoutW && savedFlyoutW >= 120 && savedFlyoutW <= 500) {
+          try { flyout.setAttribute('width', savedFlyoutW); } catch (e) {}
+          window.dispatchEvent(new Event('resize'));
+        }
+        setTimeout(repositionFlyoutDivider, 250);
+        window.addEventListener('resize', repositionFlyoutDivider);
+
+        var fDrag = false, fStartX = 0, fStartW = 0;
+        flyoutDivider.addEventListener('pointerdown', function(e) {
+          fDrag = true;
+          fStartX = e.clientX;
+          fStartW = getFlyoutWidth();
+          flyoutDivider.setPointerCapture(e.pointerId);
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          e.preventDefault();
+        });
+        flyoutDivider.addEventListener('pointermove', function(e) {
+          if (!fDrag) return;
+          var newW = fStartW + (e.clientX - fStartX);
+          newW = Math.max(120, Math.min(500, newW));
+          // Set the SVG's width attribute — Blockly reads this when re-layouting
+          try { flyout.setAttribute('width', newW); } catch (e) {}
+          flyoutDivider.style.left = (newW - 3) + 'px';
+          e.preventDefault();
+        });
+        flyoutDivider.addEventListener('pointerup', function(e) {
+          if (!fDrag) return;
+          fDrag = false;
+          flyoutDivider.releasePointerCapture(e.pointerId);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          _lsSetNum('thinkzy-flyout-width', getFlyoutWidth());
+          window.dispatchEvent(new Event('resize'));
+          setTimeout(repositionFlyoutDivider, 100);
+        });
+      } else {
+        console.log('[Thinkzy] Flyout not found — skipping palette divider');
+      }
+    }
 
     // Initial resize
     window.dispatchEvent(new Event('resize'));
