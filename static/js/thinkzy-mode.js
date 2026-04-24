@@ -144,18 +144,36 @@
     var stageWrapper = document.querySelector('[class*="gui_stage-and-target-wrapper"]');
     if (!flexWrapper || !editorWrapper || !stageWrapper) return;
     _setupDone = true;
-    console.log('[Thinkzy] Layout setup: injecting dividers (editor↔stage, palette↔workspace)');
+    console.log('[Thinkzy] Layout setup: injecting editor↔stage divider');
 
-    // ── Divider 1: editor ↔ stage (existing behaviour) ────────────────
+    // Enforce a minimum width on the stage wrapper so it NEVER disappears
+    // off-screen when the kid drags the divider too far right. The user
+    // previously reported the sprite/stage panel jumping out of view.
+    stageWrapper.style.setProperty('min-width', '320px', 'important');
+    stageWrapper.style.setProperty('flex-shrink', '0', 'important');
+
+    // ── Divider: editor ↔ stage (the ONLY divider — a 2nd one for the
+    //    flyout was tried but broke Blockly's internal layout) ──
     var divider = document.createElement('div');
     divider.className = 'thinkzy-divider';
     flexWrapper.insertBefore(divider, stageWrapper);
-    console.log('[Thinkzy] Divider 1 injected, editor width:', editorWrapper.offsetWidth);
+    console.log('[Thinkzy] Divider injected, editor width:', editorWrapper.offsetWidth);
+
+    // Clamp helper — keeps the editor within safe bounds relative to the
+    // current flex-wrapper width (responds to window resize).
+    function clampEditorWidth(newW) {
+      var total = flexWrapper.offsetWidth;
+      // Editor must leave at least 320px for the stage, but no less than
+      // 30% of the total for itself (so the block palette stays usable).
+      var minEditor = Math.max(total * 0.30, 400);
+      var maxEditor = Math.max(total - 320, total * 0.55);
+      return Math.max(minEditor, Math.min(maxEditor, newW));
+    }
 
     // Restore saved editor width before first paint completes
     var _savedEditorWidth = _lsGetNum('thinkzy-editor-width');
-    if (_savedEditorWidth && _savedEditorWidth > 200 && _savedEditorWidth < flexWrapper.offsetWidth - 200) {
-      editorWrapper.style.setProperty('width', _savedEditorWidth + 'px', 'important');
+    if (_savedEditorWidth) {
+      editorWrapper.style.setProperty('width', clampEditorWidth(_savedEditorWidth) + 'px', 'important');
     }
 
     // Draggable divider logic — uses Pointer Capture to beat Blockly
@@ -167,7 +185,7 @@
       isDragging = true;
       startX = e.clientX;
       startWidth = editorWrapper.offsetWidth;
-      divider.setPointerCapture(e.pointerId);  // ALL pointer events go to divider now
+      divider.setPointerCapture(e.pointerId);
       divider.classList.add('dragging');
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
@@ -176,9 +194,7 @@
 
     divider.addEventListener('pointermove', function(e) {
       if (!isDragging) return;
-      var totalWidth = flexWrapper.offsetWidth;
-      var newWidth = startWidth + (e.clientX - startX);
-      newWidth = Math.max(totalWidth * 0.2, Math.min(totalWidth * 0.75, newWidth));
+      var newWidth = clampEditorWidth(startWidth + (e.clientX - startX));
       editorWrapper.style.setProperty('width', newWidth + 'px', 'important');
       e.preventDefault();
     });
@@ -190,96 +206,30 @@
       divider.classList.remove('dragging');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      // Persist chosen width so the kid keeps their layout across reloads
+      // Persist so the kid's chosen layout survives reloads
       _lsSetNum('thinkzy-editor-width', editorWrapper.offsetWidth);
-      // Tell TurboWarp to recalculate
+      // Tell TurboWarp/Blockly to recalculate SVG dimensions
       window.dispatchEvent(new Event('resize'));
     });
 
-    // ── Divider 2: block palette (flyout) ↔ script workspace ──────────
-    // Blockly renders palette + workspace as SVG siblings inside
-    // `[class*="blocks_blocks"]`. There is no official CSS-driven width
-    // on the flyout — Blockly manages it via its own layout code. We drag
-    // a transparent overlay handle and, on drop, call Blockly's internal
-    // reflow by dispatching a window `resize`. The flyout's width is set
-    // via its DOM's `width` attribute on the outer <svg class="blocklyFlyout">.
-    var blocksRoot = editorWrapper.querySelector('[class*="blocks_blocks"]');
-    if (blocksRoot) {
-      var flyout = blocksRoot.querySelector('svg.blocklyFlyout, [class*="blocklyFlyout"]');
-      if (flyout) {
-        var flyoutDivider = document.createElement('div');
-        flyoutDivider.className = 'thinkzy-flyout-divider';
-        flyoutDivider.style.cssText = [
-          'position: absolute',
-          'top: 0',
-          'bottom: 0',
-          'width: 6px',
-          'cursor: col-resize',
-          'z-index: 50',
-          'background: transparent',
-          'touch-action: none'
-        ].join(';');
-        // Positioning relies on blocksRoot being a positioning context
-        var prevPos = blocksRoot.style.position;
-        if (!prevPos || prevPos === 'static') blocksRoot.style.position = 'relative';
-        blocksRoot.appendChild(flyoutDivider);
-
-        // Helper: read current flyout width from its rendered SVG box
-        function getFlyoutWidth() {
-          var bb = flyout.getBoundingClientRect();
-          return bb.width;
-        }
-
-        // Position the divider just to the right of the flyout's current edge
-        function repositionFlyoutDivider() {
-          var w = getFlyoutWidth();
-          flyoutDivider.style.left = (w - 3) + 'px';
-        }
-
-        // Restore saved width, then position handle
-        var savedFlyoutW = _lsGetNum('thinkzy-flyout-width');
-        if (savedFlyoutW && savedFlyoutW >= 120 && savedFlyoutW <= 500) {
-          try { flyout.setAttribute('width', savedFlyoutW); } catch (e) {}
-          window.dispatchEvent(new Event('resize'));
-        }
-        setTimeout(repositionFlyoutDivider, 250);
-        window.addEventListener('resize', repositionFlyoutDivider);
-
-        var fDrag = false, fStartX = 0, fStartW = 0;
-        flyoutDivider.addEventListener('pointerdown', function(e) {
-          fDrag = true;
-          fStartX = e.clientX;
-          fStartW = getFlyoutWidth();
-          flyoutDivider.setPointerCapture(e.pointerId);
-          document.body.style.cursor = 'col-resize';
-          document.body.style.userSelect = 'none';
-          e.preventDefault();
-        });
-        flyoutDivider.addEventListener('pointermove', function(e) {
-          if (!fDrag) return;
-          var newW = fStartW + (e.clientX - fStartX);
-          newW = Math.max(120, Math.min(500, newW));
-          // Set the SVG's width attribute — Blockly reads this when re-layouting
-          try { flyout.setAttribute('width', newW); } catch (e) {}
-          flyoutDivider.style.left = (newW - 3) + 'px';
-          e.preventDefault();
-        });
-        flyoutDivider.addEventListener('pointerup', function(e) {
-          if (!fDrag) return;
-          fDrag = false;
-          flyoutDivider.releasePointerCapture(e.pointerId);
-          document.body.style.cursor = '';
-          document.body.style.userSelect = '';
-          _lsSetNum('thinkzy-flyout-width', getFlyoutWidth());
-          window.dispatchEvent(new Event('resize'));
-          setTimeout(repositionFlyoutDivider, 100);
-        });
-      } else {
-        console.log('[Thinkzy] Flyout not found — skipping palette divider');
+    // On window resize, re-clamp the editor width so the stage never
+    // disappears when the browser window shrinks.
+    window.addEventListener('resize', function() {
+      var current = editorWrapper.offsetWidth;
+      var clamped = clampEditorWidth(current);
+      if (Math.abs(clamped - current) > 4) {
+        editorWrapper.style.setProperty('width', clamped + 'px', 'important');
       }
-    }
+    });
 
-    // Initial resize
+    // Note: an earlier version tried to inject a second divider between
+    // the block palette (flyout) and the script workspace. Blockly lays
+    // out those two with SVG absolute positioning, not flexbox, so
+    // CSS-width hacks left the workspace offset incorrectly and caused
+    // the sprite/stage panels to jump out of view. We reverted to a
+    // single divider — the flyout width is managed by Blockly itself.
+
+    // Initial resize to sync TurboWarp's SVG dimensions with restored width
     window.dispatchEvent(new Event('resize'));
 
     // ── Inject custom Play / Stop buttons above the stage ──

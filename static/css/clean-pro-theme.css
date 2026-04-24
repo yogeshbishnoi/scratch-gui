@@ -1,764 +1,441 @@
 /*
- * Thinkzy "Clean Pro" Theme — TurboWarp Editor
- * -----------------------------------------------
- * Targets: https://thinkzy-turbowarp.pages.dev
- * All selectors use [class*="..."] attribute matching to survive hash changes.
- * Sections: Globals → Toolbar → Tabs → Controls → Blocks → Workspace → Stage → Sprites
+ * Thinkzy — Claude-design theme for the TurboWarp editor
+ * =====================================================
+ * Warm cream palette + Claude rust accents. Designed for Class 6–10.
+ * Loaded by static/js/thinkzy-mode.js on ?thinkzy=true URLs.
+ *
+ * All selectors use [class*="..."] attribute matching so the theme
+ * survives TurboWarp's CSS-Modules hash changes on upstream rebases.
+ *
+ * Sections:
+ *   1. Tokens + Globals
+ *   2. Stage / Canvas area
+ *   3. Block palette (flyout)
+ *   4. Workspace (code canvas)
+ *   5. Sprite selector + sprite+ button
+ *   6. Sprite info panel
+ *   7. Backdrop / stage selector
+ *   8. Tabs (Code / Costumes / Sounds)
+ *   9. Dividers + resize polish
+ *  10. Responsive fallbacks
  */
 
-/* ── GLOBALS ─────────────────────────────────────────────────────────────
-   Font stack and CSS variables used throughout                            */
+/* ─── 1. Tokens + Globals ──────────────────────────────────────────── */
 :root {
-  --cp-blue:        #185FA5;
-  --cp-blue-light:  #378ADD;
-  --cp-blue-tint:   #E6F1FB;
-  --cp-blue-border: #B5D4F4;
-  --cp-amber:       #EF9F27;
-  --cp-amber-dark:  #BA7517;
-  --cp-red:         #E24B4A;
-  --cp-red-dark:    #A32D2D;
-  --cp-surface:     #FFFFFF;
-  --cp-surface-gray:#FAFBFC;
-  --cp-sidebar-bg:  #F8FAFD;
-  --cp-text:        #1A1A2E;
-  --cp-text-muted:  #4A5568;
-  --cp-text-blue:   #0C447C;
+  --thz-cream:        #FAF9F6;  /* page + workspace */
+  --thz-cream-2:      #F5F2EC;  /* secondary surface */
+  --thz-cream-3:      #EFEBE3;  /* hover / inactive */
+  --thz-paper:        #FFFFFF;  /* cards, inputs */
+
+  --thz-text:         #1A1A1A;  /* primary text */
+  --thz-text-2:       #3F3F46;  /* secondary text */
+  --thz-text-mute:    #71717A;  /* meta, labels */
+
+  --thz-rust:         #D97757;  /* Claude rust — primary accent */
+  --thz-rust-hover:   #C3613F;
+  --thz-rust-soft:    #F5E8E0;  /* tint */
+
+  --thz-green:        #52C788;  /* run / success */
+  --thz-green-hover:  #3DAE6F;
+  --thz-red:          #E24B4A;  /* stop / error */
+  --thz-red-hover:    #C53232;
+
+  --thz-border:       #E5E0D6;
+  --thz-border-soft:  rgba(26,26,26,0.06);
+
+  --thz-shadow-sm:    0 1px 2px rgba(20,15,10,0.04);
+  --thz-shadow:       0 1px 3px rgba(20,15,10,0.06), 0 1px 2px rgba(20,15,10,0.03);
+  --thz-shadow-lg:    0 4px 12px rgba(20,15,10,0.08), 0 2px 4px rgba(20,15,10,0.04);
+
+  --thz-radius-sm:    6px;
+  --thz-radius:       10px;
+  --thz-radius-lg:    14px;
+
+  --thz-font:         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-body,
-[class*="gui_page-wrapper"],
-[class*="gui_flex-wrapper"] {
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body, html {
+  font-family: var(--thz-font) !important;
+  background: var(--thz-cream) !important;
+  color: var(--thz-text) !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── TOOLBAR ─────────────────────────────────────────────────────────────
-   The top navigation bar — blue background, 40px height                  */
-[class*="menu-bar_menu-bar"] {
-  background: var(--cp-blue) !important;
-  height: 40px !important;
-  min-height: 40px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18) !important;
-  padding: 0 8px !important;
-  display: flex !important;
-  align-items: center !important;
+/* Hide upstream TurboWarp chrome. Reinforces thinkzy-mode.js's inline rules. */
+[class*="menu-bar_main-menu"],
+[class*="menu-bar_account-info"],
+[class*="menu-bar_file-group"] { display: none !important; }
+
+/* ─── 2. Stage / Canvas area ──────────────────────────────────────── */
+[class*="stage-wrapper_stage-wrapper"],
+[class*="stage-and-target-wrapper"] {
+  background: var(--thz-cream-2) !important;
+  border-left: 1px solid var(--thz-border) !important;
 }
 
-[class*="menu-bar_main-menu"] {
-  height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
+[class*="stage_stage"] {
+  border-radius: var(--thz-radius) !important;
+  box-shadow: var(--thz-shadow) !important;
+  background: #F0F5E8 !important; /* softer pastel green */
+  border: 1px solid var(--thz-border) !important;
 }
 
-/* Thinkzy logo text area */
-[class*="menu-bar_scratch-logo"],
-[class*="menu-bar_scratch-logo"] img {
-  height: 24px !important;
-  width: auto !important;
-  filter: brightness(0) invert(1) !important;
-}
-
-/* Title / project name field */
-[class*="menu-bar_title-field"],
-[class*="menu-bar_title-field-growable"] input,
-[class*="author-info_project-title"] {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: #ffffff !important;
+[class*="stage-header_stage-header"] {
   background: transparent !important;
-  border: none !important;
-  outline: none !important;
+  border-bottom: 1px solid var(--thz-border-soft) !important;
+  padding: 6px 12px !important;
 }
 
-[class*="menu-bar_title-field-growable"] input::placeholder {
-  color: rgba(255,255,255,0.5) !important;
+/* ─── 3. Block palette (flyout) ───────────────────────────────────── */
+[class*="blocks_blocks"],
+[class*="gui_flex-wrapper"] > div:first-child {
+  background: var(--thz-cream) !important;
 }
 
-/* Menu-bar buttons (File, Edit, etc.) */
-[class*="menu-bar_menu-bar-button"],
-[class*="menu-bar_hoverable"],
-[class*="menu-bar_menu-bar-menu"] {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  color: rgba(255,255,255,0.9) !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  transition: background 0.15s ease !important;
+.blocklyFlyoutBackground,
+svg.blocklyFlyout ~ rect[class*="blocklyFlyoutBackground"] {
+  fill: var(--thz-cream-2) !important;
 }
 
-[class*="menu-bar_hoverable"]:hover {
-  background: rgba(255,255,255,0.15) !important;
-}
-
-[class*="menu-bar_active"],
-[class*="menu-bar_hoverable"][class*="menu-bar_active"] {
-  background: rgba(255,255,255,0.2) !important;
-}
-
-/* Dividers in menu bar */
-[class*="menu-bar_divider"] {
-  border-color: rgba(255,255,255,0.2) !important;
-}
-
-/* ── TABS (Code / Costumes / Sounds) ─────────────────────────────────────
-   Pill-style tabs inside the toolbar area                                 */
-[class*="gui_tabs"] {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-[class*="gui_tab-list"],
-[class*="react-tabs_react-tabs__tab-list"] {
-  background: transparent !important;
-  border-bottom: none !important;
-  padding: 4px 6px !important;
-  display: flex !important;
-  gap: 4px !important;
-  margin: 0 !important;
-}
-
-[class*="gui_tab"],
-[class*="react-tabs_react-tabs__tab_"] {
-  background: rgba(255,255,255,0.15) !important;
-  color: rgba(255,255,255,0.9) !important;
-  border: none !important;
-  border-radius: 6px !important;
-  padding: 3px 12px !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-  cursor: pointer !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
-  bottom: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-[class*="gui_tab"]:hover,
-[class*="react-tabs_react-tabs__tab_"]:hover {
-  background: rgba(255,255,255,0.25) !important;
-}
-
-/* Active tab — white pill with blue text */
-[class*="gui_is-selected"],
-[class*="react-tabs_react-tabs__tab--selected"] {
-  background: #ffffff !important;
-  color: var(--cp-blue) !important;
-  font-weight: 600 !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.12) !important;
-}
-
-/* Tab panels */
-[class*="gui_tab-panel"],
-[class*="react-tabs_react-tabs__tab-panel_"] {
-  border: none !important;
-  padding: 0 !important;
-}
-
-[class*="react-tabs_react-tabs__tab-panel--selected"],
-[class*="gui_tab-panel"][class*="is-selected"] {
-  display: flex !important;
-}
-
-/* ── CONTROLS (Run ▶ / Stop ■) ───────────────────────────────────────────
-   Amber run button and red stop button styled as pill buttons             */
-[class*="controls_controls-container"] {
-  background: transparent !important;
-  padding: 0 6px !important;
-  gap: 6px !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* Green flag → Amber run pill */
-[class*="green-flag_green-flag"] {
-  background: var(--cp-amber) !important;
-  border-radius: 16px !important;
-  padding: 4px 14px 4px 10px !important;
-  width: auto !important;
-  height: 28px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  transition: background 0.15s ease !important;
-  border: none !important;
-  cursor: pointer !important;
-}
-
-[class*="green-flag_green-flag"]:hover {
-  background: var(--cp-amber-dark) !important;
-}
-
-[class*="green-flag_green-flag"]:active,
-[class*="green-flag_is-active"] {
-  background: var(--cp-amber-dark) !important;
-  transform: scale(0.97) !important;
-}
-
-/* Override the green flag SVG icon colour to white */
-[class*="green-flag_green-flag"] img,
-[class*="green-flag_green-flag"] svg path {
-  filter: brightness(0) invert(1) !important;
-}
-
-/* Stop button → Red stop pill */
-[class*="stop-all_stop-all"] {
-  background: var(--cp-red) !important;
-  border-radius: 16px !important;
-  padding: 4px 12px 4px 10px !important;
-  width: auto !important;
-  height: 28px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  transition: background 0.15s ease !important;
-  border: none !important;
-  cursor: pointer !important;
-  margin-left: 4px !important;
-}
-
-[class*="stop-all_stop-all"]:hover {
-  background: var(--cp-red-dark) !important;
-}
-
-[class*="stop-all_stop-all"]:active,
-[class*="stop-all_is-active"] {
-  background: var(--cp-red-dark) !important;
-  transform: scale(0.97) !important;
-}
-
-[class*="stop-all_stop-all"] img,
-[class*="stop-all_stop-all"] svg path {
-  filter: brightness(0) invert(1) !important;
-}
-
-/* ── BLOCK PALETTE (left panel) ──────────────────────────────────────────
-   Block category sidebar and flyout block list                            */
-
-/* Scratch category menu rail */
-[class*="scratchCategoryMenu"],
-.scratchCategoryMenu {
-  background: var(--cp-sidebar-bg) !important;
-  border-right: 0.5px solid var(--cp-blue-border) !important;
-  width: 72px !important;
-  min-width: 72px !important;
+/* Category tabs on left rail */
+[class*="category-selector"] {
+  background: var(--thz-cream-2) !important;
+  border-right: 1px solid var(--thz-border) !important;
   padding: 8px 0 !important;
 }
 
-/* Each category button */
-[class*="scratchCategoryMenuItem"],
-.scratchCategoryMenuItem {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 6px 4px !important;
-  cursor: pointer !important;
-  border-radius: 6px !important;
-  margin: 1px 4px !important;
+[class*="category_category"] {
+  padding: 10px 6px !important;
+  margin: 2px 6px !important;
+  border-radius: var(--thz-radius-sm) !important;
   transition: background 0.12s ease !important;
-  font-size: 9px !important;
-  font-weight: 400 !important;
-  color: var(--cp-text-muted) !important;
-  letter-spacing: 0.2px !important;
-  border-left: 2px solid transparent !important;
-}
-
-[class*="scratchCategoryMenuItem"]:hover,
-.scratchCategoryMenuItem:hover {
-  background: var(--cp-blue-tint) !important;
-}
-
-/* Active category */
-[class*="scratchCategoryMenuItemActive"],
-.scratchCategoryMenuItemActive {
-  background: var(--cp-blue-tint) !important;
-  border-left-color: var(--cp-blue) !important;
-  color: var(--cp-text-blue) !important;
   font-weight: 600 !important;
-}
-
-/* Blockly flyout background (block list panel) */
-.blocklyFlyoutBackground {
-  fill: var(--cp-sidebar-bg) !important;
-  rx: 0 !important;
-}
-
-.blocklyFlyout {
-  background: var(--cp-sidebar-bg) !important;
-}
-
-/* Category label in flyout */
-.blocklyFlyoutLabelText {
-  fill: var(--cp-text-blue) !important;
-  font-size: 9px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.6px !important;
-  text-transform: uppercase !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-}
-
-/* Blocks in flyout */
-.blocklyFlyout .blocklyDraggable > path.blocklyPath {
-  filter: none !important;
-  transition: filter 0.1s ease !important;
-}
-
-.blocklyFlyout .blocklyDraggable:hover > path.blocklyPath {
-  filter: brightness(1.1) !important;
-  cursor: grab !important;
-}
-
-/* Block text */
-.blocklyText,
-.blocklyFlyoutLabelText {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-  font-size: 10px !important;
-  font-weight: 500 !important;
-}
-
-/* Blocks wrapper background */
-[class*="blocks_blocks"] {
-  background: var(--cp-sidebar-bg) !important;
-}
-
-/* ── SCRIPT WORKSPACE ────────────────────────────────────────────────────
-   Center canvas with dot-grid pattern and flat block styling              */
-
-/* Main workspace background */
-.blocklyMainBackground {
-  fill: var(--cp-surface-gray) !important;
-}
-
-/* Dot-grid SVG pattern overlay */
-.blocklyWorkspace {
-  background-image: radial-gradient(circle, var(--cp-blue-border) 1px, transparent 1px) !important;
-  background-size: 20px 20px !important;
-}
-
-/* Grid dots within Blockly SVG */
-.blocklyGridLine {
-  stroke: var(--cp-blue-border) !important;
-  stroke-width: 1 !important;
-}
-
-/* Script blocks in workspace — flat, no heavy drop shadow */
-.blocklyWorkspace .blocklyDraggable > path.blocklyPath {
-  filter: none !important;
-}
-
-/* Selected block highlight */
-.blocklySelected > path.blocklyPath {
-  stroke: var(--cp-blue-light) !important;
-  stroke-width: 2px !important;
-}
-
-/* Block being dragged */
-.blocklyDragging > path.blocklyPath {
-  opacity: 0.88 !important;
-  filter: drop-shadow(0 4px 10px rgba(24, 95, 165, 0.2)) !important;
-}
-
-/* Workspace container */
-[class*="gui_blocks-wrapper"],
-[class*="blocks_blocks"] {
-  background: var(--cp-surface-gray) !important;
-}
-
-/* ── STAGE AREA ──────────────────────────────────────────────────────────
-   Right panel: stage preview, controls header, sprite info                */
-
-/* Stage wrapper */
-[class*="stage-wrapper_stage-wrapper"],
-[class*="gui_stage-and-target-wrapper"] {
-  border-left: 0.5px solid var(--cp-blue-border) !important;
-  background: var(--cp-surface) !important;
-}
-
-/* Stage canvas container */
-[class*="stage_stage"],
-[class*="stage_frame"] {
-  background: #EAF3DE !important;
-  border-radius: 0 !important;
-}
-
-/* Stage canvas itself — keep it sharp, no border radius */
-[class*="stage_stage"] canvas {
-  border-radius: 0 !important;
-}
-
-/* Stage header bar */
-[class*="stage-header_stage-header-wrapper"],
-[class*="stage-header_stage-menu-wrapper"] {
-  background: var(--cp-surface) !important;
-  border-bottom: 0.5px solid var(--cp-blue-border) !important;
-  padding: 4px 8px !important;
-  min-height: 32px !important;
-}
-
-/* Stage size toggle buttons */
-[class*="stage-header_stage-button"] {
-  background: var(--cp-blue-tint) !important;
-  border: 0.5px solid var(--cp-blue-border) !important;
-  border-radius: 6px !important;
-  padding: 3px 8px !important;
   font-size: 11px !important;
-  color: var(--cp-text-blue) !important;
-  cursor: pointer !important;
-  transition: background 0.12s !important;
 }
 
-[class*="stage-header_stage-button"]:hover {
-  background: var(--cp-blue) !important;
-  color: white !important;
+[class*="category_category"]:hover {
+  background: var(--thz-cream-3) !important;
 }
 
-/* Stage-size toggle group */
-[class*="stage-header_stage-size-toggle-group"] {
-  display: flex !important;
-  gap: 4px !important;
+[class*="category_is-selected"] {
+  background: var(--thz-rust-soft) !important;
+  border-left: 3px solid var(--thz-rust) !important;
+  padding-left: 3px !important;
 }
 
-/* Fullscreen/settings icons in stage header */
-[class*="stage-header_stage-button-icon"] {
-  width: 14px !important;
-  height: 14px !important;
+/* ─── 4. Workspace (code canvas) ──────────────────────────────────── */
+.blocklyMainBackground {
+  stroke: none !important;
+  fill: var(--thz-cream) !important;
 }
 
-/* ── SPRITE INFO PANEL ───────────────────────────────────────────────────
-   Property chips for x, y, size, direction under the stage               */
-[class*="sprite-info_sprite-info"] {
-  background: var(--cp-surface) !important;
-  border-top: 0.5px solid var(--cp-blue-border) !important;
-  padding: 8px !important;
-  gap: 6px !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+.blocklyWorkspace > rect[class*="blocklyMainBackground"] {
+  fill: var(--thz-cream) !important;
 }
 
-[class*="sprite-info_label"] {
-  font-size: 9px !important;
-  font-weight: 400 !important;
-  color: #888 !important;
-  text-transform: none !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+/* Block shadows — subtler than default Scratch */
+.blocklyDraggable .blocklyPath {
+  filter: drop-shadow(0 1px 2px rgba(20,15,10,0.08)) !important;
 }
 
-/* Numeric value inputs styled as badge chips */
-[class*="sprite-info_sprite-input"],
-[class*="sprite-info_larger-input"] input,
-[class*="sprite-info_sprite-info"] input[type="text"],
-[class*="sprite-info_sprite-info"] input[type="number"] {
-  background: var(--cp-blue-tint) !important;
-  border: 0.5px solid var(--cp-blue-border) !important;
-  border-radius: 4px !important;
-  color: var(--cp-blue) !important;
-  font-size: 10px !important;
-  font-weight: 500 !important;
-  padding: 3px 7px !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-  outline: none !important;
-}
-
-[class*="sprite-info_sprite-input"]:focus,
-[class*="sprite-info_larger-input"] input:focus {
-  border-color: var(--cp-blue) !important;
-  box-shadow: 0 0 0 2px rgba(24,95,165,0.12) !important;
-}
-
-[class*="sprite-info_row"],
-[class*="sprite-info_row-primary"] {
-  gap: 6px !important;
-}
-
-/* Sprite name input */
-[class*="sprite-info_sprite-info"] input[class*="larger-input"] {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: var(--cp-text) !important;
-  background: transparent !important;
-  border-color: transparent !important;
-}
-
-[class*="sprite-info_sprite-info"] input[class*="larger-input"]:focus {
-  background: var(--cp-blue-tint) !important;
-  border-color: var(--cp-blue-border) !important;
-}
-
-/* Show/hide icons */
-[class*="sprite-info_icon-wrapper"] {
-  cursor: pointer !important;
-  opacity: 0.7 !important;
-  transition: opacity 0.12s !important;
-}
-
-[class*="sprite-info_icon-wrapper"]:hover {
-  opacity: 1 !important;
-}
-
-/* ── SPRITE SELECTOR STRIP ───────────────────────────────────────────────
-   Horizontal/vertical list of sprite thumbnails below stage               */
+/* ─── 5. Sprite selector + sprite+ button — HIGH VISIBILITY ──────── */
 [class*="sprite-selector_sprite-selector"] {
-  background: var(--cp-surface) !important;
-  border-top: 0.5px solid var(--cp-blue-border) !important;
-  padding: 6px !important;
+  background: var(--thz-cream-2) !important;
+  border-top: 1px solid var(--thz-border) !important;
+  border-radius: 0 !important;
+  padding: 8px 12px 60px 12px !important;  /* extra bottom padding so sprite+ stays reachable */
+  min-height: 180px !important;
+  position: relative !important;
 }
 
 [class*="sprite-selector_scroll-wrapper"] {
-  background: transparent !important;
+  overflow-y: auto !important;
+  max-height: calc(100% - 48px) !important;
 }
 
-/* Individual sprite thumbnail */
-[class*="sprite-selector-item_sprite-image-outer"],
-[class*="sprite-selector_sprite-wrapper"] > div:first-child {
-  border-radius: 8px !important;
-  border: 1.5px solid var(--cp-blue-border) !important;
-  overflow: hidden !important;
-  transition: border-color 0.12s ease !important;
-  background: var(--cp-surface-gray) !important;
+/* THE sprite+ button — make it unmissable */
+[class*="sprite-selector_add-button"],
+[class*="action-menu_main-button"] {
+  background: var(--thz-rust) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 999px !important;
   width: 44px !important;
   height: 44px !important;
-}
-
-/* Selected sprite — blue border */
-[class*="sprite-selector-item_is-selected"] [class*="sprite-selector-item_sprite-image-outer"],
-[class*="sprite-selector-item_is-selected"] > div:first-child {
-  border-color: var(--cp-blue) !important;
-  border-width: 2px !important;
-}
-
-[class*="sprite-selector_sprite"]:hover [class*="sprite-selector-item_sprite-image-outer"] {
-  border-color: var(--cp-blue-light) !important;
-}
-
-/* Sprite name label */
-[class*="sprite-selector-item_sprite-name"],
-[class*="sprite-selector_sprite-name"] {
-  font-size: 9px !important;
-  font-weight: 500 !important;
-  color: var(--cp-text-muted) !important;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-  text-align: center !important;
-}
-
-/* Delete button on sprite — shown on hover */
-[class*="sprite-selector-item_delete-button"] {
-  background: var(--cp-red) !important;
-  border-radius: 50% !important;
-  width: 16px !important;
-  height: 16px !important;
+  box-shadow: 0 3px 10px rgba(217,119,87,0.35), 0 1px 2px rgba(217,119,87,0.2) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 12px !important;
+  z-index: 20 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 10px !important;
-  color: white !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
   cursor: pointer !important;
-  opacity: 0 !important;
-  transition: opacity 0.12s ease !important;
-}
-
-[class*="sprite-selector_sprite"]:hover [class*="sprite-selector-item_delete-button"] {
-  opacity: 1 !important;
-}
-
-/* Add sprite button */
-[class*="sprite-selector_add-button"],
-[class*="action-menu_main-button"] {
-  background: var(--cp-blue) !important;
-  border-radius: 50% !important;
-  border: none !important;
-  transition: background 0.15s ease, transform 0.1s ease !important;
 }
 
 [class*="sprite-selector_add-button"]:hover,
 [class*="action-menu_main-button"]:hover {
-  background: var(--cp-blue-light) !important;
-  transform: scale(1.05) !important;
+  background: var(--thz-rust-hover) !important;
+  transform: translateY(-1px) scale(1.04) !important;
+  box-shadow: 0 5px 14px rgba(217,119,87,0.45), 0 2px 4px rgba(217,119,87,0.25) !important;
 }
 
-/* Target pane (right column outer wrapper) */
-[class*="target-pane_target-pane"] {
-  background: var(--cp-surface) !important;
+[class*="sprite-selector_add-button"]:active,
+[class*="action-menu_main-button"]:active {
+  transform: translateY(0) scale(0.98) !important;
 }
 
-/* ── EDITOR OUTER LAYOUT ─────────────────────────────────────────────────
-   Overall page and editor wrapper                                          */
-[class*="gui_editor-wrapper"],
-[class*="gui_page-wrapper"] {
-  background: var(--cp-surface-gray) !important;
+/* "Add Sprite" tooltip — appears on hover for clarity */
+[class*="sprite-selector_add-button"]::before,
+[class*="action-menu_main-button"]::before {
+  content: 'Add Sprite';
+  position: absolute;
+  right: 54px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--thz-text);
+  color: #FFFFFF;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  font-family: var(--thz-font);
 }
 
-/* ── MODALS & ALERTS ─────────────────────────────────────────────────────
-   Connection alerts, loading dialogs                                       */
-[class*="alert_alert"] {
-  border-radius: 8px !important;
-  border: 0.5px solid var(--cp-blue-border) !important;
-  box-shadow: 0 4px 16px rgba(24,95,165,0.12) !important;
+[class*="sprite-selector_add-button"]:hover::before,
+[class*="action-menu_main-button"]:hover::before {
+  opacity: 1;
 }
 
-[class*="alert_success"] {
-  background: #EAF5EA !important;
-  border-color: #A8D5A2 !important;
+/* Each sprite thumbnail in the grid */
+[class*="sprite-selector-item"] {
+  background: var(--thz-paper) !important;
+  border: 2px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  padding: 8px !important;
+  transition: all 0.12s ease !important;
 }
 
-[class*="alert_warn"] {
-  background: #FFF8E7 !important;
-  border-color: #F5D98B !important;
+[class*="sprite-selector-item"]:hover {
+  border-color: var(--thz-rust-soft) !important;
+  transform: translateY(-1px) !important;
 }
 
-/* ── RESPONSIVE: collapse palette at < 900px ─────────────────────────────
-   Narrow palette shows icon-only rail                                      */
-@media (max-width: 900px) {
-  [class*="scratchCategoryMenu"],
-  .scratchCategoryMenu {
-    width: 52px !important;
-    min-width: 52px !important;
-  }
-
-  [class*="scratchCategoryMenuItem"] span,
-  .scratchCategoryMenuItem span {
-    display: none !important;
-  }
+[class*="sprite-selector-item_is-selected"] {
+  border-color: var(--thz-rust) !important;
+  box-shadow: 0 0 0 3px var(--thz-rust-soft) !important;
 }
 
-/* ── RESPONSIVE: hide stage panel at < 700px ─────────────────────────────
-   Compact view — stage accessed via toggle                                  */
-@media (max-width: 700px) {
-  [class*="stage-wrapper_stage-wrapper"],
-  [class*="gui_stage-and-target-wrapper"] {
-    display: none !important;
-  }
+/* ─── 6. Sprite info panel (name, x, y, size, direction) ─────────── */
+[class*="sprite-info_sprite-info"] {
+  background: var(--thz-paper) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius) !important;
+  box-shadow: var(--thz-shadow-sm) !important;
+  padding: 10px 14px !important;
+  margin: 8px 12px !important;
 }
 
-/* ── SCROLLBARS ─────────────────────────────────────────────────────────
-   Thin, blue-tinted scrollbars                                            */
-::-webkit-scrollbar {
-  width: 5px !important;
-  height: 5px !important;
+[class*="sprite-info_label"] {
+  color: var(--thz-text-mute) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
 }
 
-::-webkit-scrollbar-track {
+[class*="sprite-info_group"] input,
+[class*="sprite-info"] input {
+  background: var(--thz-cream) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  padding: 4px 8px !important;
+  font-family: var(--thz-font) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--thz-text) !important;
+}
+
+[class*="sprite-info_group"] input:focus,
+[class*="sprite-info"] input:focus {
+  outline: none !important;
+  border-color: var(--thz-rust) !important;
+  box-shadow: 0 0 0 3px var(--thz-rust-soft) !important;
+}
+
+/* ─── 7. Backdrop / stage selector (right sidebar) ───────────────── */
+[class*="target-pane_stage-selector-wrapper"] {
+  background: var(--thz-cream-2) !important;
+  border-left: 1px solid var(--thz-border) !important;
+  padding: 10px 8px !important;
+  min-width: 72px !important;
+}
+
+[class*="stage-selector_stage-selector"] {
+  background: var(--thz-paper) !important;
+  border: 2px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  padding: 6px !important;
+  transition: all 0.12s ease !important;
+}
+
+[class*="stage-selector_is-selected"] {
+  border-color: var(--thz-rust) !important;
+  box-shadow: 0 0 0 3px var(--thz-rust-soft) !important;
+}
+
+[class*="stage-selector_header"] {
+  color: var(--thz-text-mute) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 4px 0 !important;
+}
+
+/* ─── 8. Tabs (Code / Costumes / Sounds) ─────────────────────────── */
+[class*="react-tabs_react-tabs__tab-list"] {
+  background: var(--thz-cream-2) !important;
+  border-bottom: 1px solid var(--thz-border) !important;
+  padding: 0 8px !important;
+  gap: 2px !important;
+}
+
+[class*="react-tabs_react-tabs__tab"] {
   background: transparent !important;
+  color: var(--thz-text-2) !important;
+  border: none !important;
+  padding: 10px 16px !important;
+  border-radius: var(--thz-radius-sm) var(--thz-radius-sm) 0 0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--cp-blue-border) !important;
-  border-radius: 4px !important;
+[class*="react-tabs_react-tabs__tab"]:hover {
+  background: var(--thz-cream-3) !important;
+  color: var(--thz-text) !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--cp-blue-light) !important;
+[class*="react-tabs_react-tabs__tab--selected"] {
+  background: var(--thz-paper) !important;
+  color: var(--thz-rust) !important;
+  border-bottom: 2px solid var(--thz-rust) !important;
+  margin-bottom: -1px !important;
 }
 
-/* ── THINKZY PHASE 2 MODE ────────────────────────────────────────────────
-   Activated when the TurboWarp build receives `?mission=2-X` URL param or
-   `SET_THINKZY_MODE` postMessage and adds `thinkzy-mode-2-1` (etc.) to
-   document.body. Hides editor chrome that's irrelevant for kids in Phase 2,
-   restores canvas resize, and locks the layout to prevent kids accidentally
-   destroying their game by misclicking a menu.
-
-   Coverage: 2-1 → 2-5. The `addBackdrop`/`addSound` allow-list is mission-
-   specific and toggled by adding extra body classes (`thinkzy-allow-backdrop`,
-   `thinkzy-allow-sound`) — see SET_THINKZY_MODE handler.                   */
-
-/* Hide all "secondary" toolbar items in Thinkzy mode. We target the
-   File/Edit/Settings menus, project rename, "See Project Page", "TurboWarp
-   Feedback", language switcher, share button, etc. by their shared menu-bar
-   classes. Note: Run/Stop and Code/Costumes/Sounds tabs are retained. */
-body[class*="thinkzy-mode-2"] [class*="menu-bar_file-group"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_edit-menu"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_settings-menu"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_account-info"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_share-button"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_community-button"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_feedback"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_see-community"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_save-status"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_language"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_title-field"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_title-field-growable"],
-body[class*="thinkzy-mode-2"] [class*="menu-bar_author-info"],
-body[class*="thinkzy-mode-2"] [class*="author-info_project-title"],
-body[class*="thinkzy-mode-2"] [class*="backpack_backpack-container"],
-body[class*="thinkzy-mode-2"] [class*="backpack_backpack-header"],
-body[class*="thinkzy-mode-2"] [class*="gui_backpack"],
-body[class*="thinkzy-mode-2"] [class*="search-bar"],
-body[class*="thinkzy-mode-2"] [class*="searchInput"],
-body[class*="thinkzy-mode-2"] [class*="find_find"],
-body[class*="thinkzy-mode-2"] input[type="search"][placeholder*="Find"] {
-  display: none !important;
-}
-
-/* Hide the "Add Sprite" library button — Phase 2 sprites are pre-loaded per
-   mission via the starter .sb3 file. Re-enable for missions that explicitly
-   ask the kid to add a sprite (currently none in 2-1 → 2-5). */
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
-  [class*="action-menu_main-button"][class*="sprite"],
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
-  [class*="sprite-selector_add-button"],
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
-  button[aria-label*="Choose a Sprite" i],
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-add-sprite)
-  button[title*="Choose a Sprite" i] {
-  display: none !important;
-}
-
-/* Hide "Add Backdrop" unless the mission explicitly enables it (2-4 / 2-5) */
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop)
-  [class*="stage-selector_add-button"],
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop)
-  button[aria-label*="Choose a Backdrop" i],
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-backdrop)
-  button[title*="Choose a Backdrop" i] {
-  display: none !important;
-}
-
-/* Hide Sounds tab unless explicitly allowed (2-5) */
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-sound)
-  [class*="gui_tab"][data-tab-key="sounds"],
-body[class*="thinkzy-mode-2"]:not(.thinkzy-allow-sound)
-  [class*="react-tabs_react-tabs__tab"]:nth-of-type(3) {
-  display: none !important;
-}
-
-/* ── RESTORE CANVAS RESIZE ──────────────────────────────────────────────
-   The TurboWarp build ships a draggable divider between the workspace and
-   stage panel. Several themes accidentally hide it. We force the divider
-   visible at all viewport widths and restore col-resize cursor.            */
-
-[class*="gui_resize-divider"],
-[class*="gui_workspace-divider"],
-[class*="resize-divider"],
-[class*="WorkspaceDivider"],
-[class*="stage-wrapper_divider"],
-.workspace-resize-handle,
-[data-divider="workspace-stage"] {
-  display: block !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
+/* ─── 9. Dividers + resize polish ────────────────────────────────── */
+/* Thinkzy-mode.js inserts a draggable <div class="thinkzy-divider"> */
+.thinkzy-divider {
+  width: 8px !important;
+  background: var(--thz-border) !important;
   cursor: col-resize !important;
-  background: var(--cp-blue-border) !important;
-  width: 4px !important;
-  min-width: 4px !important;
-  z-index: 10 !important;
+  position: relative !important;
+  flex: 0 0 8px !important;
+  transition: background 0.12s ease !important;
 }
 
-/* Stage panel wrapper must allow flex-basis to shrink/grow when divider drags */
-[class*="gui_stage-and-target-wrapper"],
-[class*="stage-wrapper_stage-wrapper"] {
-  flex-shrink: 1 !important;
-  min-width: 200px !important;
+.thinkzy-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 28px;
+  background: var(--thz-text-mute);
+  border-radius: 2px;
+  opacity: 0.4;
 }
 
-/* Workspace wrapper must also allow flex-basis to flex */
-[class*="gui_blocks-wrapper"] {
-  flex: 1 1 0 !important;
-  min-width: 200px !important;
+.thinkzy-divider:hover,
+.thinkzy-divider.dragging {
+  background: var(--thz-rust) !important;
 }
 
-/* Don't auto-hide the stage panel below 700px in Phase 2 — kids on tablets
-   need it for testing. Override the earlier responsive rule. */
-body[class*="thinkzy-mode-2"] [class*="stage-wrapper_stage-wrapper"],
-body[class*="thinkzy-mode-2"] [class*="gui_stage-and-target-wrapper"] {
-  display: flex !important;
+.thinkzy-divider:hover::before,
+.thinkzy-divider.dragging::before {
+  background: #FFFFFF;
+  opacity: 1;
+}
+
+/* Custom play / stop bar injected by thinkzy-mode.js */
+#thinkzy-play-bar {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(10px) saturate(140%) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--thz-shadow-lg) !important;
+  padding: 4px 10px !important;
+}
+
+#thinkzy-play-btn {
+  background: var(--thz-green) !important;
+  box-shadow: 0 2px 6px rgba(82,199,136,0.35) !important;
+}
+#thinkzy-play-btn:hover {
+  background: var(--thz-green-hover) !important;
+}
+
+#thinkzy-stop-btn {
+  background: var(--thz-red) !important;
+  box-shadow: 0 2px 6px rgba(226,75,74,0.35) !important;
+}
+#thinkzy-stop-btn:hover {
+  background: var(--thz-red-hover) !important;
+}
+
+/* ─── 10. Responsive fallbacks ───────────────────────────────────── */
+@media (max-width: 900px) {
+  [class*="sprite-selector_sprite-selector"] {
+    min-height: 140px !important;
+  }
+  [class*="sprite-selector_add-button"]::before,
+  [class*="action-menu_main-button"]::before {
+    display: none;
+  }
+}
+
+/* Ensure the whole flex-wrapper never lets the right pane disappear.
+   Fixes the user-reported resize bug where dragging the divider pushed
+   the stage/sprite panel out of view. */
+[class*="gui_flex-wrapper"] {
+  min-height: 500px !important;
+}
+
+[class*="gui_stage-and-target-wrapper"] {
+  min-width: 280px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Zoom controls — bottom-right of workspace */
+[class*="zoom-controls_zoom-controls"] {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius) !important;
+  box-shadow: var(--thz-shadow) !important;
+  padding: 4px !important;
+}
+
+[class*="zoom-controls_zoom-controls"] button {
+  background: transparent !important;
+  border: none !important;
+  color: var(--thz-text-2) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  transition: background 0.12s ease !important;
+}
+
+[class*="zoom-controls_zoom-controls"] button:hover {
+  background: var(--thz-cream-3) !important;
+  color: var(--thz-text) !important;
 }
