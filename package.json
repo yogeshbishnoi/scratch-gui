@@ -13,7 +13,7 @@
   "scripts": {
     "build": "npm run clean && webpack --colors --bail",
     "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
-    "deploy": "touch build/.nojekyll && gh-pages -t -d build -m \"[skip ci] Build for $(git log --pretty=format:%H -n1)\"",
+    "deploy": "wrangler deploy",
     "deploy:yogesh": "npm run build && wrangler pages deploy build --project-name=thinkzy-turbowarp --branch=yogesh --commit-dirty=true --commit-message=\"[yogesh] $(git log --pretty=format:%s -n1 2>/dev/null || echo 'manual deploy')\"",
     "deploy:main": "echo '⚠ MAIN deploys to production thinkzy-turbowarp.pages.dev — kids see this immediately. Re-run with FORCE=1 if intended.' && [ \"$FORCE\" = \"1\" ] && npm run build && wrangler pages deploy build --project-name=thinkzy-turbowarp --branch=main --commit-dirty=true --commit-message=\"[main] $(git log --pretty=format:%s -n1 2>/dev/null || echo 'manual deploy')\"",
     "prepublish": "node scripts/prepublish.mjs",
@@ -26,7 +26,8 @@
     "test:lint": "eslint . --ext .js,.jsx",
     "test:unit": "jest test[\\\\/]unit[\\\\/]addons",
     "test:smoke": "jest --runInBand test[\\\\/]smoke",
-    "watch": "webpack --colors --watch"
+    "watch": "webpack --colors --watch",
+    "preview": "wrangler dev"
   },
   "config": {
     "commitizen": {
@@ -142,6 +143,7 @@
     "webpack": "4.47.0",
     "webpack-cli": "3.3.12",
     "webpack-dev-server": "3.11.2",
+    "wrangler": "^4.85.0",
     "yauzl": "2.10.0"
   },
   "jest": {
