@@ -66,6 +66,57 @@
         }
       } catch (err) { /* ignore */ }
     }
+
+    // ── Texture pre-warm + permanent draw loop ──────────────────────────
+    //
+    // ROOT CAUSE we ship around: scratch-render's SVGSkin lazy-creates the
+    // WebGL texture inside `getTexture()`. Two failure modes converge to
+    // leave the canvas blank for kids:
+    //
+    //   (1) When the project loads, scratch-vm fires its initial render
+    //       *before* SVG <image> elements have decoded, so getTexture sees
+    //       an unloaded image and bails out without uploading a texture.
+    //   (2) For idle projects (no green-flag, no running threads),
+    //       scratch-vm's FrameLoop step is a no-op — it never calls
+    //       renderer.draw() again. So once textures finish decoding, no
+    //       follow-up draw fires and the canvas stays empty.
+    //
+    // Symptoms verified live: gl.readPixels finds the cat in the back
+    // buffer ONLY after we manually call skin.getTexture() + r.draw();
+    // canvas.toDataURL() / drawImage(canvas) — what the compositor sees —
+    // returns pure white because the back buffer was implicitly cleared
+    // (preserveDrawingBuffer: false) before the next composite.
+    //
+    // The fix: a 60Hz draw loop that (a) lazily forces getTexture on every
+    // skin (idempotent — cached after first call) and (b) calls
+    // renderer.draw(). Cost is ~1% CPU on a static scene. Self-disables if
+    // vm/runtime/renderer disappear.
+    function pumpRenderer() {
+      if (!vm || !vm.runtime || !vm.runtime.renderer) return;
+      var r = vm.runtime.renderer;
+      try {
+        var skins = r._allSkins;
+        if (skins) {
+          for (var id in skins) {
+            var s = skins[id];
+            if (s && typeof s.getTexture === 'function') {
+              try { s.getTexture([200, 200]); } catch (e) { /* skin not ready yet */ }
+            }
+          }
+        }
+        r.dirty = true;
+        r.draw();
+      } catch (err) { /* ignore — renderer may be transitioning */ }
+    }
+    function startPermanentDrawLoop() {
+      if (window.__thinkzyDrawLoop) return;
+      function tick() {
+        pumpRenderer();
+        window.__thinkzyDrawLoop = requestAnimationFrame(tick);
+      }
+      window.__thinkzyDrawLoop = requestAnimationFrame(tick);
+    }
+
     function ensureStageReady(attemptsLeft) {
       if (attemptsLeft <= 0) return;
       var cvs = document.querySelector('[class*="stage_stage"] canvas');
@@ -74,6 +125,7 @@
         return;
       }
       forceRendererSync(cvs);
+      startPermanentDrawLoop();
       if (typeof ResizeObserver !== 'undefined' && !window.__thinkzyCanvasRO) {
         window.__thinkzyCanvasRO = new ResizeObserver(function () {
           forceRendererSync(cvs);
