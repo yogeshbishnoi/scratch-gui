@@ -1,0 +1,334 @@
+/*
+ * Thinkzy — Claude-design theme for the TurboWarp editor
+ * =====================================================
+ * Loaded by static/js/thinkzy-mode.js on ?thinkzy=true URLs.
+ *
+ * DESIGN PRINCIPLE: theme = visuals only.
+ * This file touches ONLY: color, background, border, border-radius,
+ * box-shadow, font-*, letter-spacing, text-transform, opacity, filter,
+ * transition. It does NOT override position, padding, margin, min-*,
+ * max-*, flex-*, width, height, display, overflow, or z-index on native
+ * TurboWarp elements — those belong to scratch-gui's own layout code.
+ * Earlier versions broke the sprite canvas + divider interactions by
+ * !important-ing structural properties; reverted.
+ *
+ * The only structural rules are on elements we OWN: .thinkzy-divider
+ * and #thinkzy-play-bar (both injected by thinkzy-mode.js).
+ *
+ * Selectors use [class*="..."] attribute matching so the theme survives
+ * scratch-gui CSS-Modules hash churn on upstream rebases.
+ */
+
+/* ─── Tokens + font ───────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --thz-cream:        #FAF9F6;  /* page background */
+  --thz-cream-2:      #F5F2EC;  /* secondary surface */
+  --thz-cream-3:      #EFEBE3;  /* hover / inactive */
+  --thz-paper:        #FFFFFF;  /* cards + inputs */
+
+  --thz-text:         #1A1A1A;
+  --thz-text-2:       #3F3F46;
+  --thz-text-mute:    #71717A;
+
+  --thz-rust:         #D97757;  /* Claude rust — primary accent */
+  --thz-rust-hover:   #C3613F;
+  --thz-rust-soft:    #F5E8E0;
+
+  --thz-green:        #52C788;
+  --thz-green-hover:  #3DAE6F;
+  --thz-red:          #E24B4A;
+  --thz-red-hover:    #C53232;
+
+  --thz-border:       #E5E0D6;
+  --thz-border-soft:  rgba(26,26,26,0.06);
+
+  --thz-shadow-sm:    0 1px 2px rgba(20,15,10,0.04);
+  --thz-shadow:       0 1px 3px rgba(20,15,10,0.06), 0 1px 2px rgba(20,15,10,0.03);
+  --thz-shadow-lg:    0 4px 12px rgba(20,15,10,0.08), 0 2px 4px rgba(20,15,10,0.04);
+
+  --thz-radius-sm:    6px;
+  --thz-radius:       10px;
+  --thz-radius-lg:    14px;
+
+  --thz-font:         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ─── Globals (visual only) ───────────────────────────────────────── */
+body, html {
+  font-family: var(--thz-font) !important;
+  background: var(--thz-cream) !important;
+  color: var(--thz-text) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Stage canvas — color + border only ─────────────────────────── */
+[class*="stage_stage"] {
+  background: #F0F5E8 !important;   /* soft pastel green */
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius) !important;
+  box-shadow: var(--thz-shadow) !important;
+}
+
+[class*="stage-header_stage-header"] {
+  background: transparent !important;
+  border-bottom: 1px solid var(--thz-border-soft) !important;
+  color: var(--thz-text-2) !important;
+  font-family: var(--thz-font) !important;
+}
+
+/* ─── Block palette / flyout — fill only ─────────────────────────── */
+.blocklyFlyoutBackground {
+  fill: var(--thz-cream-2) !important;
+}
+
+.blocklyMainBackground {
+  stroke: none !important;
+  fill: var(--thz-cream) !important;
+}
+
+/* Subtler block shadows */
+.blocklyDraggable .blocklyPath {
+  filter: drop-shadow(0 1px 2px rgba(20,15,10,0.08)) !important;
+}
+
+/* ─── Category rail — background + hover + selected tint ──────────── */
+[class*="category-selector"] {
+  background: var(--thz-cream-2) !important;
+  border-right: 1px solid var(--thz-border) !important;
+  font-family: var(--thz-font) !important;
+}
+
+[class*="category_category"] {
+  color: var(--thz-text-2) !important;
+  font-family: var(--thz-font) !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
+}
+
+[class*="category_category"]:hover {
+  background: var(--thz-cream-3) !important;
+  color: var(--thz-text) !important;
+}
+
+[class*="category_is-selected"] {
+  background: var(--thz-rust-soft) !important;
+  color: var(--thz-rust) !important;
+}
+
+/* ─── Sprite selector — background color only ────────────────────── */
+[class*="sprite-selector_sprite-selector"] {
+  background: var(--thz-cream-2) !important;
+  border-top: 1px solid var(--thz-border) !important;
+  font-family: var(--thz-font) !important;
+}
+
+/* ─── Sprite+ / Add button — visual ONLY, no position overrides ──── */
+/* TurboWarp already positions this absolutely at bottom: 0.75rem;
+   right: 1rem inside .sprite-selector (which is natively position:
+   relative). We only tint it. Crucially do NOT override position,
+   width, height, bottom, right, display — that's what broke layout. */
+[class*="sprite-selector_add-button"],
+[class*="action-menu_main-button"] {
+  background: var(--thz-rust) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 3px 10px rgba(217,119,87,0.35), 0 1px 2px rgba(217,119,87,0.2) !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+
+[class*="sprite-selector_add-button"]:hover,
+[class*="action-menu_main-button"]:hover {
+  background: var(--thz-rust-hover) !important;
+  box-shadow: 0 5px 14px rgba(217,119,87,0.45), 0 2px 4px rgba(217,119,87,0.25) !important;
+  filter: brightness(1.03) !important;
+}
+
+/* ─── Sprite thumbnails in the grid — border tint only ───────────── */
+[class*="sprite-selector-item"] {
+  background: var(--thz-paper) !important;
+  border: 2px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+[class*="sprite-selector-item"]:hover {
+  border-color: var(--thz-rust-soft) !important;
+}
+
+[class*="sprite-selector-item_is-selected"] {
+  border-color: var(--thz-rust) !important;
+  box-shadow: 0 0 0 3px var(--thz-rust-soft) !important;
+}
+
+/* ─── Sprite info panel — inputs only, no container overrides ───── */
+[class*="sprite-info_sprite-info"] {
+  background: var(--thz-paper) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius) !important;
+  box-shadow: var(--thz-shadow-sm) !important;
+  font-family: var(--thz-font) !important;
+}
+
+[class*="sprite-info_label"] {
+  color: var(--thz-text-mute) !important;
+  font-family: var(--thz-font) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+}
+
+[class*="sprite-info"] input,
+[class*="sprite-info_group"] input {
+  background: var(--thz-cream) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  color: var(--thz-text) !important;
+  font-family: var(--thz-font) !important;
+  font-weight: 500 !important;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+[class*="sprite-info"] input:focus,
+[class*="sprite-info_group"] input:focus {
+  outline: none !important;
+  border-color: var(--thz-rust) !important;
+  box-shadow: 0 0 0 3px var(--thz-rust-soft) !important;
+}
+
+/* ─── Stage / backdrop selector on the right — thumbnails only ───── */
+[class*="target-pane_stage-selector-wrapper"] {
+  background: var(--thz-cream-2) !important;
+  border-left: 1px solid var(--thz-border) !important;
+}
+
+[class*="stage-selector_stage-selector"] {
+  background: var(--thz-paper) !important;
+  border: 2px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+[class*="stage-selector_is-selected"] {
+  border-color: var(--thz-rust) !important;
+  box-shadow: 0 0 0 3px var(--thz-rust-soft) !important;
+}
+
+[class*="stage-selector_header"] {
+  color: var(--thz-text-mute) !important;
+  font-family: var(--thz-font) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+/* ─── Tabs (Code / Costumes / Sounds) — typography + active color ── */
+[class*="react-tabs_react-tabs__tab-list"] {
+  background: var(--thz-cream-2) !important;
+  border-bottom: 1px solid var(--thz-border) !important;
+}
+
+[class*="react-tabs_react-tabs__tab"] {
+  background: transparent !important;
+  color: var(--thz-text-2) !important;
+  border: none !important;
+  font-family: var(--thz-font) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
+}
+
+[class*="react-tabs_react-tabs__tab"]:hover {
+  background: var(--thz-cream-3) !important;
+  color: var(--thz-text) !important;
+}
+
+[class*="react-tabs_react-tabs__tab--selected"] {
+  background: var(--thz-paper) !important;
+  color: var(--thz-rust) !important;
+  border-bottom: 2px solid var(--thz-rust) !important;
+}
+
+/* ─── Dividers (OURS — full positioning OK here) ──────────────────── */
+.thinkzy-divider {
+  width: 8px !important;
+  background: var(--thz-border) !important;
+  cursor: col-resize !important;
+  position: relative !important;
+  flex: 0 0 8px !important;
+  transition: background 0.12s ease !important;
+}
+
+.thinkzy-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 28px;
+  background: var(--thz-text-mute);
+  border-radius: 2px;
+  opacity: 0.4;
+}
+
+.thinkzy-divider:hover,
+.thinkzy-divider.dragging {
+  background: var(--thz-rust) !important;
+}
+
+.thinkzy-divider:hover::before,
+.thinkzy-divider.dragging::before {
+  background: #FFFFFF;
+  opacity: 1;
+}
+
+/* ─── Play / Stop bar (OURS — full positioning OK) ────────────────── */
+#thinkzy-play-bar {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(10px) saturate(140%) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--thz-shadow-lg) !important;
+}
+
+#thinkzy-play-btn {
+  background: var(--thz-green) !important;
+  box-shadow: 0 2px 6px rgba(82,199,136,0.35) !important;
+}
+#thinkzy-play-btn:hover {
+  background: var(--thz-green-hover) !important;
+}
+
+#thinkzy-stop-btn {
+  background: var(--thz-red) !important;
+  box-shadow: 0 2px 6px rgba(226,75,74,0.35) !important;
+}
+#thinkzy-stop-btn:hover {
+  background: var(--thz-red-hover) !important;
+}
+
+/* ─── Zoom controls — background only ─────────────────────────────── */
+[class*="zoom-controls_zoom-controls"] {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid var(--thz-border) !important;
+  border-radius: var(--thz-radius) !important;
+  box-shadow: var(--thz-shadow) !important;
+}
+
+[class*="zoom-controls_zoom-controls"] button {
+  background: transparent !important;
+  border: none !important;
+  color: var(--thz-text-2) !important;
+  border-radius: var(--thz-radius-sm) !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
+}
+
+[class*="zoom-controls_zoom-controls"] button:hover {
+  background: var(--thz-cream-3) !important;
+  color: var(--thz-text) !important;
+}
