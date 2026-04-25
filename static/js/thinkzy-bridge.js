@@ -44,28 +44,44 @@
       if (vm.setStageSize) vm.setStageSize(480, 360);
     } catch (e) { /* swallow — never block bridge init */ }
 
-    // ── Watch the canvas for CSS size changes and keep the WebGL
-    //    drawing buffer in sync. scratch-gui's stage.jsx only calls
-    //    renderer.resize() from componentDidMount/Update (driven by
-    //    stageSize/isFullScreen/dimensions props), so container-driven
-    //    resizes (iframe width change, parent chat-dock toggle) leave
-    //    the buffer stale. ResizeObserver on the canvas closes that gap.
-    try {
-      var stageCanvas = document.querySelector('[class*="stage_stage"] canvas');
-      if (stageCanvas && typeof ResizeObserver !== 'undefined' && !window.__thinkzyCanvasRO) {
-        window.__thinkzyCanvasRO = new ResizeObserver(function () {
-          try {
-            var w = stageCanvas.clientWidth;
-            var h = stageCanvas.clientHeight;
-            if (w > 0 && h > 0 && vm.renderer && vm.renderer.resize) {
-              vm.renderer.resize(w, h);
-              vm.renderer.draw();
-            }
-          } catch (err) { /* ignore */ }
-        });
-        window.__thinkzyCanvasRO.observe(stageCanvas);
+    // ── Force a renderer.resize() + draw() on the visible canvas.
+    //    scratch-gui's stage.jsx only calls renderer.resize() from
+    //    componentDidMount/Update (driven by stageSize/isFullScreen/
+    //    dimensions props), so container-driven resizes leave the
+    //    drawing buffer stale and the projection matrix wrong. Doing
+    //    this once on bridge init unsticks the WebGL pipeline for
+    //    blank-start missions where pick() returns -1 even though
+    //    drawables are correctly registered.
+    //
+    //    The bridge often runs before <Stage> has mounted its <canvas>
+    //    (initBridge triggers as soon as window.vm is set), so we poll
+    //    for the canvas with non-zero dimensions before kicking the
+    //    renderer + setting up the long-lived ResizeObserver.
+    function forceRendererSync(canvas) {
+      try {
+        if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0
+            && vm.renderer && vm.renderer.resize) {
+          vm.renderer.resize(canvas.clientWidth, canvas.clientHeight);
+          vm.renderer.draw();
+        }
+      } catch (err) { /* ignore */ }
+    }
+    function ensureStageReady(attemptsLeft) {
+      if (attemptsLeft <= 0) return;
+      var cvs = document.querySelector('[class*="stage_stage"] canvas');
+      if (!cvs || cvs.clientWidth === 0 || cvs.clientHeight === 0) {
+        setTimeout(function () { ensureStageReady(attemptsLeft - 1); }, 250);
+        return;
       }
-    } catch (e) { /* ignore */ }
+      forceRendererSync(cvs);
+      if (typeof ResizeObserver !== 'undefined' && !window.__thinkzyCanvasRO) {
+        window.__thinkzyCanvasRO = new ResizeObserver(function () {
+          forceRendererSync(cvs);
+        });
+        window.__thinkzyCanvasRO.observe(cvs);
+      }
+    }
+    ensureStageReady(40); // poll up to 10s
 
     function getBlockTypes(blocks) {
       var opcodes = {};
@@ -462,7 +478,10 @@
 
     // ── Sprite-rendered signal (fires once per new sprite) ───────────
     // Used by parent for the "first sprite" delight beat and the
-    // add-sprite funnel metric.
+    // add-sprite funnel metric. Also forces a renderer.resize() + draw()
+    // because scratch-render can be in a state where the projection
+    // matrix is stale and newly-added drawables don't actually rasterise
+    // — this kick unsticks it in the same call frame as the sprite add.
     var _knownSpriteIds = new Set();
     runtime.on('targetWasCreated', function (target) {
       if (!target || target.isStage) return;
@@ -470,6 +489,8 @@
       if (_knownSpriteIds.has(id)) return;
       _knownSpriteIds.add(id);
       setTimeout(function () {
+        var cvs = document.querySelector('[class*="stage_stage"] canvas');
+        forceRendererSync(cvs);
         window.parent.postMessage({
           type: 'SPRITE_RENDERED',
           data: { name: target.getName ? target.getName() : '', id: id }
